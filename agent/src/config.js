@@ -55,6 +55,26 @@ export function resolvePath(p) {
 }
 
 /**
+ * Carga agent/.env (KEY=VALOR por linea) en process.env si existe, para que
+ * el token de Telegram no haya que escribirlo en cada comando ni acabe en git.
+ * Las variables ya definidas en el entorno tienen prioridad.
+ */
+export function loadDotEnv(file = '.env') {
+  let raw;
+  try {
+    raw = readFileSync(resolvePath(file), 'utf8');
+  } catch {
+    return;
+  }
+  for (const line of raw.split('\n')) {
+    const m = line.match(/^\s*(?:export\s+)?([A-Z_][A-Z0-9_]*)\s*=\s*(.*)\s*$/);
+    if (!m || line.trim().startsWith('#')) continue;
+    const value = m[2].replace(/^["']|["']$/g, '');
+    if (!(m[1] in process.env)) process.env[m[1]] = value;
+  }
+}
+
+/**
  * Lee config.json (o el fichero indicado), aplica los valores por defecto y
  * deja los patrones compilados como RegExp para no recompilarlos por anuncio.
  */

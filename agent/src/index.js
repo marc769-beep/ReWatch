@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs';
-import { loadConfig, resolvePath } from './config.js';
+import { loadConfig, loadDotEnv, resolvePath } from './config.js';
 import { VintedClient, sleep } from './vinted-client.js';
 import { selectMatches } from './matcher.js';
 import { SeenStore } from './store.js';
-import { notify } from './notify.js';
+import { notify, testTelegram } from './notify.js';
 
 const USAGE = `
 Agente ReWatch — busca Apple Watches en Vinted
@@ -12,6 +12,7 @@ Agente ReWatch — busca Apple Watches en Vinted
   node src/index.js --once                 una pasada y salir
   node src/index.js --watch                vigilancia continua (intervalMinutes)
   node src/index.js --once --show-rejected explica por que se descarta cada anuncio
+  node src/index.js --test-telegram        comprueba la conexion con Telegram paso a paso
   node src/index.js --fixture test/fixtures/items.json   prueba sin red
 
 Opciones:
@@ -26,6 +27,7 @@ function parseArgs(argv) {
     const a = argv[i];
     if (a === '--watch') args.mode = 'watch';
     else if (a === '--once') args.mode = 'once';
+    else if (a === '--test-telegram') args.mode = 'test-telegram';
     else if (a === '--show-rejected') args.showRejected = true;
     else if (a === '--no-store') args.store = false;
     else if (a === '--config') args.config = argv[++i];
@@ -91,6 +93,13 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) {
     console.log(USAGE);
+    return;
+  }
+
+  loadDotEnv();
+  if (args.mode === 'test-telegram') {
+    const ok = await testTelegram();
+    process.exitCode = ok ? 0 : 1;
     return;
   }
 

@@ -88,13 +88,29 @@ un filtro se está pasando de estricto.
 ## Avisos
 
 Siempre imprime por consola y guarda en `data/found.jsonl` y `data/found.csv`.
-Además, si defines estas variables de entorno:
 
-```bash
-export TELEGRAM_BOT_TOKEN=...   # bot creado con @BotFather
-export TELEGRAM_CHAT_ID=...     # tu chat id
-export WEBHOOK_URL=...          # opcional: Slack, Discord, n8n, Make...
-```
+### Conectar Telegram
+
+1. En Telegram, abre **@BotFather** → `/newbot` → te da un token.
+2. Crea el fichero `agent/.env` (copia de `.env.example`) con:
+
+   ```
+   TELEGRAM_BOT_TOKEN=el_token_de_botfather
+   ```
+
+3. Ejecuta el asistente, que te guia en lo que falte (encontrar tu chat id,
+   pulsar "Iniciar" en el bot...) y acaba enviando un mensaje de prueba:
+
+   ```bash
+   node src/index.js --test-telegram
+   ```
+
+4. Cuando diga "todo conectado", arranca normal: `npm run watch`.
+
+El paso que casi todo el mundo se salta: hay que **abrir el chat con tu bot y
+pulsar "Iniciar"** — hasta entonces Telegram no le deja mandarte nada.
+
+También hay `WEBHOOK_URL=` (Slack, Discord, n8n, Make...) en el mismo `.env`.
 
 `data/seen.json` guarda los anuncios ya avisados (30 días) para no repetirlos.
 Bórralo si quieres volver a recibirlo todo.
