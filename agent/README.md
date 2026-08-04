@@ -24,41 +24,71 @@ node src/index.js --once --fixture test/fixtures/items.json --no-store   # prueb
 node src/index.js --help
 ```
 
-## Qué busca (config.json)
+## Qué busca ahora mismo
 
-Los criterios están en `config.json`, no en el código:
+**Solo Apple Watch SE 2 (2ª generación), en buen estado:**
+
+| Tamaño | Precio máximo |
+| --- | --- |
+| 44 mm | 70 € |
+| 40 mm | 60 € |
+| sin indicar | 70 €, marcado como "tamaño sin confirmar" |
+
+El precio que compara es el **total que pagas** (con protección de compra
+incluida), no el del escaparate. Estados admitidos: nuevo, muy bueno y bueno;
+"satisfactorio" queda fuera. Los demás modelos se descartan.
+
+## Cambiar los criterios (config.json)
+
+Todo está en `config.json`, no en el código:
 
 | Campo | Para qué sirve |
 | --- | --- |
 | `queries` | Búsquedas que lanza en Vinted |
-| `models` | Modelos objetivo y **precio máximo por modelo** (`s6`, `se`, `se2`, `s7`…) |
-| `filters.maxPriceEur` / `minPriceEur` | Tope global y suelo antiestafa |
-| `filters.sizesMm` | Tamaños de caja, p. ej. `[40, 44]`. Vacío = todos |
-| `filters.allowedConditions` | Estados de Vinted admitidos, p. ej. `["muy bueno", "nuevo con etiqueta"]`. Vacío = todos |
-| `filters.excludePatterns` | Descarta el anuncio (correas, fundas, "para piezas", iCloud, réplicas T500…) |
-| `filters.warnPatterns` | No descarta: marca el anuncio con un aviso (rayado, sin caja, batería baja…) |
+| `models.<id>.sizePrices` | **Precio máximo por tamaño**, p. ej. `{ "44": 70, "40": 60 }` |
+| `models.<id>.maxPrice` | Tope del modelo si el anuncio no dice el tamaño |
+| `filters.maxPriceEur` / `minPriceEur` | Tope global y suelo antiestafa (30 €) |
+| `filters.sizesMm` | Tamaños admitidos: `[40, 44]` |
+| `filters.allowedConditions` | Estados de Vinted admitidos (se comparan por inclusión) |
+| `filters.allowUnknownCondition` | Si el anuncio no trae estado: aceptar y marcarlo |
+| `filters.treatPlainSeAsSe2` | Ver más abajo |
+| `filters.excludePatterns` | Descarta el anuncio (correas, "para piezas", iCloud, réplicas T500, pantalla rajada…) |
+| `filters.warnPatterns` | No descarta: marca el anuncio con un aviso (rayado, sin caja, marcas de uso…) |
 | `intervalMinutes` | Cada cuánto revisa en modo `--watch` |
 
-Añadir un modelo nuevo es una línea:
+Subir el tope del 44 mm a 75 € es cambiar un número. Volver a buscar otro modelo
+es añadir una línea:
 
 ```json
-"ultra2": { "label": "Apple Watch Ultra 2", "maxPrice": 480 }
+"s6": { "label": "Apple Watch Series 6", "sizePrices": { "44": 130, "40": 115 } }
 ```
 
-Si además pones `"resalePrice": 199` en un modelo, cada resultado incluye el
+Si además pones `"resalePrice": 169` en un modelo, cada resultado incluye el
 margen estimado frente a tu precio de venta.
 
-Los precios de `models` que trae el fichero son de compra pensados para revender
-(Series 6 hasta 130 €, SE hasta 110 €…). Ajústalos a tu margen real.
+### Los SE que no dicen la generación
+
+Muchos vendedores anuncian un SE 2 simplemente como "Apple Watch SE": por el
+texto no hay forma de saber si es de 2020 o de 2022. Por defecto el agente los
+acepta con el aviso **"generación sin confirmar"** para que los mires tú (mejor
+revisar tres fotos de más que perder una ganga). Si prefieres que solo pasen los
+que dicen explícitamente SE 2 / 2022 / 2023:
+
+```json
+"treatPlainSeAsSe2": false
+```
 
 ### Cómo decide
 
 1. Debe parecer un Apple Watch (`apple watch` / `iwatch` en título o descripción).
 2. Se descartan los `excludePatterns` (accesorios, averiados, bloqueados, falsos).
-3. Se deduce el modelo del texto: `Series 6`, `serie 6`, `S6`, `SE`, `SE 2`, `Ultra 2`…
+3. Se deduce el modelo del texto: `SE 2`, `SE 2ª generación`, `SE 2022`, `Series 6`, `S7`…
    (`"se vende Apple Watch Series 6"` se clasifica como Series 6, no como SE).
-4. Se comprueban tamaño, precio total (el que pagas, con protección incluida) y estado.
+4. Se comprueban tamaño, precio total y estado, con el tope del tamaño concreto.
 5. Lo que sobrevive se ordena de más barato a más caro.
+
+Con `--show-rejected` ves el motivo exacto de cada descarte, útil para saber si
+un filtro se está pasando de estricto.
 
 ## Avisos
 

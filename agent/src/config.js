@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { normalize } from './matcher.js';
 
 export const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -21,6 +22,8 @@ const DEFAULTS = {
     sizesMm: [],
     allowUnknownSize: true,
     allowedConditions: [],
+    allowUnknownCondition: true,
+    treatPlainSeAsSe2: true,
     requireAppleWatchInTitle: true,
     excludePatterns: [],
     warnPatterns: [],
@@ -33,6 +36,19 @@ const DEFAULTS = {
     seenTtlDays: 30,
   },
 };
+
+/**
+ * Acepta patrones como cadena ("\\bsin caja\\b") o como objeto con etiqueta
+ * ({ "pattern": "...", "label": "sin caja" }) y devuelve siempre { re, label },
+ * para que los avisos se lean en castellano y no como una expresion regular.
+ */
+export function compilePatterns(patterns = []) {
+  return patterns.map((p) => {
+    const pattern = typeof p === 'string' ? p : p.pattern;
+    const fallback = pattern.replace(/\\b/g, '').replace(/\\/g, '').trim();
+    return { re: new RegExp(pattern, 'i'), label: (typeof p === 'object' && p.label) || fallback };
+  });
+}
 
 export function resolvePath(p) {
   return isAbsolute(p) ? p : join(ROOT, p);
@@ -55,9 +71,9 @@ export function loadConfig(file = 'config.json') {
     throw new Error('config.models esta vacio: define al menos un modelo objetivo');
   }
 
-  cfg.filters.excludeRegexes = cfg.filters.excludePatterns.map((p) => new RegExp(p, 'i'));
-  cfg.filters.warnRegexes = cfg.filters.warnPatterns.map((p) => new RegExp(p, 'i'));
-  cfg.filters.allowedConditions = cfg.filters.allowedConditions.map((c) => c.toLowerCase());
+  cfg.filters.excludeRegexes = compilePatterns(cfg.filters.excludePatterns);
+  cfg.filters.warnRegexes = compilePatterns(cfg.filters.warnPatterns);
+  cfg.filters.allowedConditions = cfg.filters.allowedConditions.map((c) => normalize(c));
 
   // Overrides puntuales sin tocar el fichero, utiles para probar desde consola.
   if (process.env.REWATCH_MAX_PRICE) {

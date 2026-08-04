@@ -11,12 +11,10 @@ function csvCell(value) {
 
 export function formatLine(m) {
   const size = m.sizeMm ? `${m.sizeMm}mm` : 'tamano?';
-  const extras = [m.cellular ? 'cellular' : null, ...(m.flags?.length ? ['ojo: ' + m.flags.length + ' aviso(s)'] : [])]
-    .filter(Boolean)
-    .join(', ');
-  return `${String(m.price).padStart(5)} ${m.currency}  ${m.modelLabel} ${size}${extras ? ` (${extras})` : ''}\n`
-    + `        ${m.title}\n`
-    + `        ${m.url}`;
+  const head = `${String(m.price).padStart(6)} ${m.currency}  ${m.modelLabel} ${size}`
+    + `${m.cellular ? ' cellular' : ''}${m.condition ? ` · ${m.condition}` : ''}`;
+  const avisos = m.flags?.length ? `\n        ojo: ${m.flags.join(', ')}` : '';
+  return `${head}\n        ${m.title}\n        ${m.url}${avisos}`;
 }
 
 export function appendJsonl(path, matches) {

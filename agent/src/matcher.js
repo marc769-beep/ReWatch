@@ -93,6 +93,43 @@ export function toListing(item, domain = 'www.vinted.es') {
 }
 
 /**
+ * Precio maximo aplicable a un anuncio. `sizePrices` manda sobre `maxPrice`
+ * porque el tope depende del tamano de la caja (un 44mm vale mas que un 40mm).
+ * Si el anuncio no dice el tamano se usa el tope mas alto y se marca el aviso
+ * "tamano sin confirmar": mejor revisar de mas que perder una ganga.
+ */
+export function priceCap(target, sizeMm) {
+  const fallback = Number.isFinite(target.maxPrice) ? target.maxPrice : Number.POSITIVE_INFINITY;
+  if (!target.sizePrices) return fallback;
+
+  if (sizeMm !== null && sizeMm !== undefined) {
+    const exact = target.sizePrices[String(sizeMm)];
+    return Number.isFinite(exact) ? exact : fallback;
+  }
+  const values = Object.values(target.sizePrices).filter(Number.isFinite);
+  return values.length ? Math.max(...values) : fallback;
+}
+
+/**
+ * El estado que devuelve Vinted es texto ("Muy bueno", "Nuevo con etiquetas"),
+ * y varia entre paises, asi que se compara por inclusion y no por igualdad.
+ */
+export function checkCondition(condition, filters) {
+  const allowed = filters.allowedConditions ?? [];
+  if (!allowed.length) return { ok: true };
+
+  const value = normalize(condition);
+  if (!value) {
+    return filters.allowUnknownCondition
+      ? { ok: true, flag: 'estado sin especificar' }
+      : { ok: false, reason: 'estado sin especificar' };
+  }
+  return allowed.some((a) => value.includes(a))
+    ? { ok: true }
+    : { ok: false, reason: `estado "${condition}" no admitido` };
+}
+
+/**
  * Decide si un anuncio encaja con los criterios de config.
  * Devuelve siempre el motivo del descarte para poder depurar busquedas.
  */
@@ -115,17 +152,26 @@ export function evaluate(listing, config) {
     return result;
   }
 
-  const blocked = f.excludeRegexes?.find((re) => re.test(haystack));
+  const blocked = f.excludeRegexes?.find(({ re }) => re.test(haystack));
   if (blocked) {
-    result.reason = `descartado por patron: ${blocked.source}`;
+    result.reason = `descartado por: ${blocked.label}`;
     return result;
   }
 
-  const model = detectModel(haystack);
+  let model = detectModel(haystack);
   result.model = model;
   if (!model) {
     result.reason = 'modelo no identificado en el titulo';
     return result;
+  }
+
+  // Muchos SE de 2a generacion se anuncian solo como "Apple Watch SE": no hay
+  // forma de distinguirlos por el texto, asi que se aceptan como SE 2 marcados
+  // para revisar (desactivable con filters.treatPlainSeAsSe2 = false).
+  if (model === 'se' && !config.models.se && f.treatPlainSeAsSe2 && config.models.se2) {
+    model = 'se2';
+    result.model = 'se2';
+    result.flags.push('generacion sin confirmar');
   }
 
   const target = config.models[model];
@@ -151,10 +197,11 @@ export function evaluate(listing, config) {
     result.reason = 'sin precio';
     return result;
   }
-  const cap = Math.min(
-    Number.isFinite(target.maxPrice) ? target.maxPrice : Number.POSITIVE_INFINITY,
-    f.maxPriceEur,
-  );
+  const cap = Math.min(priceCap(target, result.sizeMm), f.maxPriceEur);
+  result.priceCap = cap;
+  if (result.sizeMm === null && target.sizePrices) {
+    result.flags.push('tamano sin confirmar');
+  }
   if (listing.price > cap) {
     result.reason = `precio ${listing.price}${listing.currency} por encima del maximo ${cap}`;
     return result;
@@ -164,13 +211,15 @@ export function evaluate(listing, config) {
     return result;
   }
 
-  if (f.allowedConditions.length && !f.allowedConditions.includes(normalize(listing.condition))) {
-    result.reason = `estado "${listing.condition}" no admitido`;
+  const conditionCheck = checkCondition(listing.condition, f);
+  if (!conditionCheck.ok) {
+    result.reason = conditionCheck.reason;
     return result;
   }
+  if (conditionCheck.flag) result.flags.push(conditionCheck.flag);
 
   result.cellular = CELLULAR_RE.test(haystack);
-  result.flags = (f.warnRegexes ?? []).filter((re) => re.test(haystack)).map((re) => re.source);
+  result.flags.push(...(f.warnRegexes ?? []).filter(({ re }) => re.test(haystack)).map(({ label }) => label));
   result.margin = Number.isFinite(target.resalePrice) ? target.resalePrice - listing.price : null;
   result.match = true;
   return result;
