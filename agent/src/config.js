@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { normalize } from './matcher.js';
@@ -52,6 +52,25 @@ export function compilePatterns(patterns = []) {
 
 export function resolvePath(p) {
   return isAbsolute(p) ? p : join(ROOT, p);
+}
+
+/**
+ * Escribe o reemplaza KEY=VALOR en agent/.env, conservando el resto de lineas.
+ * Lo usa el asistente de Telegram para que el usuario no edite ficheros a mano.
+ */
+export function saveEnvVar(key, value, file = '.env') {
+  const path = resolvePath(file);
+  let raw = '';
+  try {
+    raw = readFileSync(path, 'utf8');
+  } catch {
+    // primer uso: se crea de cero
+  }
+  const line = `${key}=${value}`;
+  const re = new RegExp(`^\\s*(?:export\\s+)?${key}\\s*=.*$`, 'm');
+  const next = re.test(raw) ? raw.replace(re, line) : raw + (raw && !raw.endsWith('\n') ? '\n' : '') + line + '\n';
+  writeFileSync(path, next);
+  process.env[key] = value;
 }
 
 /**

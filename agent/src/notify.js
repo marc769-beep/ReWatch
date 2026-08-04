@@ -1,6 +1,7 @@
 import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { resolvePath } from './config.js';
+import { createInterface } from 'node:readline/promises';
+import { resolvePath, saveEnvVar } from './config.js';
 
 const CSV_COLUMNS = ['foundAt', 'id', 'modelLabel', 'sizeMm', 'price', 'currency', 'condition', 'seller', 'title', 'url'];
 
@@ -67,77 +68,111 @@ async function tg(token, method) {
   return res.json().catch(() => ({ ok: false, description: `HTTP ${res.status}` }));
 }
 
+async function findChats(token) {
+  const updates = await tg(token, 'getUpdates');
+  const chats = new Map();
+  for (const u of updates.result ?? []) {
+    const c = u.message?.chat;
+    if (c) chats.set(String(c.id), c.first_name ?? c.title ?? c.username ?? '');
+  }
+  return chats;
+}
+
 /**
- * Diagnostico paso a paso de la conexion con Telegram (comando --test-telegram).
- * Comprueba el token, ayuda a encontrar el chat id y envia un mensaje de prueba,
- * explicando en cada fallo que hay que corregir.
+ * Asistente interactivo de Telegram (comando --test-telegram).
+ * Pide el token por pantalla, descubre el chat id, guarda ambos en agent/.env
+ * el solo y termina enviando un mensaje de prueba. En cada fallo explica que
+ * corregir; no hace falta editar ningun fichero a mano.
  */
 export async function testTelegram({ logger = console } = {}) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  // Ctrl+D o entrada agotada cuentan como "salir", no como error.
+  const ask = (q) => rl.question(q).then((a) => a.trim()).catch(() => null);
 
-  if (!token) {
-    logger.log(
-      'Falta TELEGRAM_BOT_TOKEN.\n\n'
-      + '1. En Telegram, abre @BotFather y envia /newbot\n'
-      + '2. Dale un nombre y un usuario (debe acabar en "bot", p. ej. rewatch_marc_bot)\n'
-      + '3. BotFather te dara un token tipo 123456789:AAH3xxxxx...\n'
-      + '4. Crea el fichero agent/.env con esta linea:\n\n'
-      + '   TELEGRAM_BOT_TOKEN=tu_token\n\n'
-      + 'y vuelve a ejecutar: node src/index.js --test-telegram',
-    );
-    return false;
-  }
-
-  const me = await tg(token, 'getMe');
-  if (!me.ok) {
-    logger.log(
-      `El token no es valido (Telegram dice: ${me.description}).\n`
-      + 'Copia el token completo de @BotFather, incluidos los dos puntos, sin espacios.',
-    );
-    return false;
-  }
-  logger.log(`Token correcto. Tu bot es @${me.result.username}`);
-
-  if (!chatId) {
-    const updates = await tg(token, 'getUpdates');
-    const chats = new Map();
-    for (const u of updates.result ?? []) {
-      const c = u.message?.chat;
-      if (c) chats.set(c.id, c.first_name ?? c.title ?? c.username ?? '');
+  try {
+    // ---- Paso 1: token ----
+    let token = process.env.TELEGRAM_BOT_TOKEN;
+    let me = token ? await tg(token, 'getMe') : null;
+    if (me && !me.ok) {
+      logger.log(`El token guardado ya no vale (Telegram dice: ${me.description}). Vamos a pedirlo de nuevo.\n`);
+      token = null;
     }
-    if (!chats.size) {
+
+    while (!token) {
       logger.log(
-        '\nFalta TELEGRAM_CHAT_ID y tu bot aun no ha recibido ningun mensaje.\n\n'
-        + `1. Abre https://t.me/${me.result.username} en Telegram\n`
-        + '2. Pulsa "Iniciar" (o "Start") y envia cualquier mensaje, p. ej. "hola"\n'
-        + '3. Vuelve a ejecutar: node src/index.js --test-telegram\n'
-        + 'y te dire tu chat id.',
+        'PASO 1 — El token de tu bot\n'
+        + '  1. En Telegram, abre @BotFather y envia /newbot\n'
+        + '  2. Dale un nombre (el que quieras) y un usuario que acabe en "bot"\n'
+        + '  3. BotFather te respondera con un token tipo 123456789:AAH3xxxxx\n',
       );
-      return false;
-    }
-    logger.log('\nHe encontrado estos chats hablando con tu bot:');
-    for (const [id, name] of chats) logger.log(`   chat id ${id}  (${name})`);
-    logger.log(
-      '\nAnade el tuyo a agent/.env:\n\n'
-      + `   TELEGRAM_CHAT_ID=${[...chats.keys()][0]}\n\n`
-      + 'y vuelve a ejecutar: node src/index.js --test-telegram',
-    );
-    return false;
-  }
+      const answer = await ask('Pega aqui el token y pulsa Enter (o escribe q para salir): ');
+      if (!answer || answer.toLowerCase() === 'q') {
+        logger.log('Asistente cancelado. Vuelve cuando tengas el token: node src/index.js --test-telegram');
+        return false;
+      }
 
-  const fake = [{ modelLabel: 'Prueba ReWatch', sizeMm: 44, price: 65, currency: 'EUR', url: 'https://www.vinted.es' }];
-  const ok = await sendTelegram(fake, { logger });
-  if (ok) {
-    logger.log('\nMensaje de prueba enviado: mira tu Telegram. Ya esta todo conectado.');
-  } else {
-    logger.log(
-      '\nNo se pudo enviar. Si el error dice "chat not found", el chat id esta mal\n'
-      + 'o todavia no has pulsado "Iniciar" en el chat con tu bot.\n'
-      + 'Borra TELEGRAM_CHAT_ID del .env y vuelve a ejecutar este comando para detectarlo.',
-    );
+      me = await tg(answer, 'getMe');
+      if (!me.ok) {
+        logger.log(
+          `\nEse token no vale (Telegram dice: ${me.description}).\n`
+          + 'Copialo entero del mensaje de @BotFather, con los dos puntos, sin espacios.\n',
+        );
+        continue;
+      }
+      token = answer;
+      saveEnvVar('TELEGRAM_BOT_TOKEN', token);
+      logger.log('\nGuardado en agent/.env — no tendras que volver a pegarlo.');
+    }
+    logger.log(`Token correcto. Tu bot es @${me.result.username}\n`);
+
+    // ---- Paso 2: chat id ----
+    let chatId = process.env.TELEGRAM_CHAT_ID;
+    while (!chatId) {
+      const chats = await findChats(token);
+      if (chats.size === 1) {
+        const [[id, name]] = [...chats];
+        chatId = id;
+        saveEnvVar('TELEGRAM_CHAT_ID', chatId);
+        logger.log(`PASO 2 — Chat encontrado: ${name} (id ${id}). Guardado en agent/.env.\n`);
+      } else if (chats.size > 1) {
+        logger.log('PASO 2 — Varios chats han hablado con tu bot:');
+        for (const [id, name] of chats) logger.log(`   ${id}  (${name})`);
+        const pick = await ask('\nEscribe el id que es el tuyo (q para salir): ');
+        if (pick === null || pick.toLowerCase() === 'q') return false;
+        if (chats.has(pick)) {
+          chatId = pick;
+          saveEnvVar('TELEGRAM_CHAT_ID', chatId);
+        } else {
+          logger.log('Ese id no esta en la lista, prueba otra vez.\n');
+        }
+      } else {
+        logger.log(
+          'PASO 2 — Tu chat id\n'
+          + `  1. Abre este enlace en Telegram: https://t.me/${me.result.username}\n`
+          + '  2. Pulsa "Iniciar" (o "Start")\n'
+          + '  3. Enviale cualquier mensaje, por ejemplo "hola"\n',
+        );
+        const cont = await ask('Cuando lo hayas hecho, pulsa Enter y lo detecto solo (q para salir): ');
+        if (cont === null || cont.toLowerCase() === 'q') return false;
+      }
+    }
+
+    // ---- Paso 3: mensaje de prueba ----
+    const fake = [{ modelLabel: 'Prueba ReWatch', sizeMm: 44, price: 65, currency: 'EUR', url: 'https://www.vinted.es' }];
+    const ok = await sendTelegram(fake, { logger });
+    if (ok) {
+      logger.log('PASO 3 — Mensaje de prueba enviado: mira tu Telegram. Todo conectado.\n\nYa puedes arrancar el agente con: npm run watch');
+    } else {
+      logger.log(
+        'PASO 3 — No se pudo enviar el mensaje de prueba.\n'
+        + 'Si el error dice "chat not found", borra la linea TELEGRAM_CHAT_ID de agent/.env\n'
+        + 'y vuelve a ejecutar este comando para detectarlo de nuevo.',
+      );
+    }
+    return ok;
+  } finally {
+    rl.close();
   }
-  return ok;
 }
 
 /** Aviso generico (Slack, Discord, n8n...) si esta definido WEBHOOK_URL. */

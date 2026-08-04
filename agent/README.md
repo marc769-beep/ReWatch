@@ -91,26 +91,23 @@ Siempre imprime por consola y guarda en `data/found.jsonl` y `data/found.csv`.
 
 ### Conectar Telegram
 
-1. En Telegram, abre **@BotFather** → `/newbot` → te da un token.
-2. Crea el fichero `agent/.env` (copia de `.env.example`) con:
+No hay que editar ningun fichero: el asistente lo hace todo.
 
-   ```
-   TELEGRAM_BOT_TOKEN=el_token_de_botfather
-   ```
+```bash
+node src/index.js --test-telegram
+```
 
-3. Ejecuta el asistente, que te guia en lo que falte (encontrar tu chat id,
-   pulsar "Iniciar" en el bot...) y acaba enviando un mensaje de prueba:
-
-   ```bash
-   node src/index.js --test-telegram
-   ```
-
-4. Cuando diga "todo conectado", arranca normal: `npm run watch`.
+Te va guiando paso a paso: crear el bot con **@BotFather**, pegar el token
+cuando te lo pida (lo guarda el solo en `agent/.env`), detectar tu chat id
+automaticamente y enviarte un mensaje de prueba. Cuando diga "todo conectado",
+arranca normal: `npm run watch`.
 
 El paso que casi todo el mundo se salta: hay que **abrir el chat con tu bot y
-pulsar "Iniciar"** — hasta entonces Telegram no le deja mandarte nada.
+pulsar "Iniciar"** — hasta entonces Telegram no le deja mandarte nada. El
+asistente te avisa si falta.
 
-También hay `WEBHOOK_URL=` (Slack, Discord, n8n, Make...) en el mismo `.env`.
+Para otros destinos (Slack, Discord, n8n, Make...) anade `WEBHOOK_URL=` al
+mismo `.env`.
 
 `data/seen.json` guarda los anuncios ya avisados (30 días) para no repetirlos.
 Bórralo si quieres volver a recibirlo todo.
