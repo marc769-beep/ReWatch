@@ -4,7 +4,7 @@ import { loadConfig, loadDotEnv, resolvePath } from './config.js';
 import { VintedClient, sleep } from './vinted-client.js';
 import { selectMatches } from './matcher.js';
 import { SeenStore } from './store.js';
-import { notify, testTelegram } from './notify.js';
+import { notify, telegramConfigured, testTelegram } from './notify.js';
 import { verifyMatches } from './verify.js';
 import { visionEnabled } from './vision.js';
 
@@ -80,16 +80,20 @@ export async function runOnce(config, client, store, { fixture = null, showRejec
     `\n${items.length} anuncios revisados · ${matches.length} encajan · ${fresh.length} sin avisar todavia`,
   );
 
-  // Segunda criba: ficha completa (y foto, si hay clave) de cada candidato.
+  // Segunda criba: anuncio completo (y foto, si hay clave) de cada candidato.
   let confirmed = fresh;
+  let processed = new Set(fresh.map((m) => m.id));
   if (fresh.length && !fixture) {
     logger.log(`Verificando ${fresh.length} candidato(s): descripcion completa${visionEnabled() ? ' y foto' : ''}...`);
-    confirmed = await verifyMatches(fresh, { client, config, logger });
+    ({ kept: confirmed, processed } = await verifyMatches(fresh, { client, config, logger }));
   }
 
   if (store) {
-    // Tambien los descartados en la verificacion: asi no se reexaminan cada pasada.
-    for (const m of fresh) store.add(m.id);
+    // Solo los realmente procesados (avisados o descartados); lo que quedo sin
+    // verificar por limite o por un 429 se reintenta en la proxima pasada.
+    for (const m of fresh) {
+      if (processed.has(m.id)) store.add(m.id);
+    }
     store.save();
   }
 
@@ -119,6 +123,12 @@ async function main() {
   const config = loadConfig(args.config);
   const client = new VintedClient({ domain: config.domain, requestDelayMs: config.requestDelayMs });
   const store = args.store ? new SeenStore(config.output.seenPath, config.output.seenTtlDays) : null;
+
+  console.log(
+    telegramConfigured()
+      ? 'Avisos por Telegram: ACTIVADOS'
+      : 'Avisos por Telegram: DESACTIVADOS — ejecuta "node src/index.js --test-telegram" para configurarlos',
+  );
 
   if (args.mode === 'once') {
     await runOnce(config, client, store, { fixture: args.fixture, showRejected: args.showRejected });

@@ -11,6 +11,13 @@ const USER_AGENT =
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+const ENTITIES = { '&amp;': '&', '&quot;': '"', '&#39;': "'", '&#x27;': "'", '&lt;': '<', '&gt;': '>', '&nbsp;': ' ' };
+export function decodeHtmlEntities(s) {
+  return s
+    .replace(/&(?:amp|quot|#39|#x27|lt|gt|nbsp);/g, (m) => ENTITIES[m])
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)));
+}
+
 export class VintedClient {
   constructor({ domain = 'www.vinted.es', requestDelayMs = 1500, fetchImpl = fetch, logger = console } = {}) {
     this.domain = domain;
@@ -102,13 +109,48 @@ export class VintedClient {
   }
 
   /**
-   * Ficha completa de un anuncio. Los resultados de busqueda no traen la
-   * descripcion entera, y ahi es donde los vendedores confiesan "bloqueado por
-   * icloud" o "pantalla rota" — de aqui la importancia de esta llamada.
+   * Descripcion completa de un anuncio. Los resultados de busqueda la traen
+   * recortada, y ahi es donde los vendedores confiesan "bloqueado por icloud"
+   * o "pantalla rota". El endpoint /api/v2/items/{id} ya no existe (404), asi
+   * que se lee la pagina publica del anuncio y se extrae la descripcion del
+   * JSON embebido o de la etiqueta og:description.
    */
-  async itemDetails(id) {
-    const data = await this.apiGet(`/api/v2/items/${id}`);
-    return data?.item ?? null;
+  async itemDescription(id, url) {
+    const target = url || `https://${this.domain}/items/${id}`;
+    if (!this.cookies.size) await this.bootstrap();
+
+    const res = await this.fetch(target, {
+      headers: {
+        'User-Agent': USER_AGENT,
+        Accept: 'text/html,application/xhtml+xml',
+        'Accept-Language': 'es-ES,es;q=0.9',
+        Referer: `https://${this.domain}/`,
+        Cookie: this.cookieHeader,
+      },
+      redirect: 'follow',
+    });
+    if (res.status === 429) {
+      throw Object.assign(new Error('Vinted esta limitando las peticiones (429)'), { retryable: true });
+    }
+    if (!res.ok) return null;
+    const html = await res.text();
+
+    // JSON embebido en la pagina (JSON-LD del producto o estado de la app)
+    const embedded = html.match(/"description"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+    if (embedded) {
+      try {
+        const text = JSON.parse(`"${embedded[1]}"`);
+        if (text.trim()) return text;
+      } catch {
+        // JSON raro: probamos con og:description
+      }
+    }
+
+    const og = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']*)["']/i)
+      ?? html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+property=["']og:description["']/i);
+    if (og && og[1].trim()) return decodeHtmlEntities(og[1]);
+
+    return null;
   }
 
   /** Recorre varias paginas de una query respetando el retardo entre llamadas. */

@@ -34,11 +34,22 @@ export function appendCsv(path, matches) {
   appendFileSync(file, header + rows + '\n');
 }
 
+export function telegramConfigured() {
+  return Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID);
+}
+
 /** Aviso por Telegram si estan definidos TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID. */
 export async function sendTelegram(matches, { logger = console } = {}) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
-  if (!token || !chatId || !matches.length) return false;
+  if (!matches.length) return false;
+  if (!token || !chatId) {
+    logger.warn?.(
+      'AVISO: Telegram no esta configurado (falta TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID en agent/.env).\n'
+      + 'Ejecuta: node src/index.js --test-telegram',
+    );
+    return false;
+  }
 
   const body = matches
     .slice(0, 10)
@@ -54,9 +65,11 @@ export async function sendTelegram(matches, { logger = console } = {}) {
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      logger.warn?.(`Telegram respondio HTTP ${res.status}: ${body.description ?? 'sin detalle'}`);
+      logger.warn?.(`FALLO el aviso por Telegram (HTTP ${res.status}: ${body.description ?? 'sin detalle'})`);
+      return false;
     }
-    return res.ok;
+    logger.log(`Aviso enviado a Telegram (${Math.min(matches.length, 10)} de ${matches.length} anuncios en el mensaje).`);
+    return true;
   } catch (err) {
     logger.warn?.(`No se pudo avisar por Telegram: ${err.message}`);
     return false;

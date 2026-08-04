@@ -50,8 +50,8 @@
     "treatPlainSeAsSe2": true,
     "requireAppleWatchInTitle": true,
     "excludePatterns": [
-      "^\\s*(correa|correas|funda|fundas|protector|cargador|cable|cristal|carcasa)\\b",
-      "\\b(correa|correas|funda|fundas|protector|cargador|cable|carcasa)\\s+(para|de|compatible)\\b",
+      "^\\s*(correa|correas|funda|fundas|protector|cargador|cable|cristal|carcasa|bracelet|cinturino|strap|armband|band|hoesje|hulle|ladegerat|chargeur|caricatore)\\b",
+      "\\b(correa|correas|funda|fundas|protector|cargador|cable|carcasa|bracelet|cinturino|strap|armband|hoesje|hulle)\\s+(para|de|compatible|pour|per|for|voor|fur)\\b",
       "\\bsolo (correa|funda|cargador|cable|caja)\\b",
       "\\bsolo caja\\b",
       "\\bcaja vacia\\b",
@@ -93,7 +93,18 @@
       "\\bhors service\\b",
       "\\bbloque\\b",
       "\\bbloccato\\b",
-      "\\blocked\\b"
+      "\\blocked\\b",
+      "\\bgebarsten\\b",
+      "\\bgebroken\\b",
+      "\\bkapot\\b",
+      "\\bdefect\\b",
+      "\\bdefekt\\b",
+      "\\bkaputt\\b",
+      "\\bgesprungen\\b",
+      "\\bdisplayschaden\\b",
+      "\\bscherm (kapot|gebarsten|gebroken)\\b",
+      "\\briss im (display|glas)\\b",
+      "\\bglasbruch\\b"
     ],
     "warnPatterns": [
       {
@@ -131,6 +142,10 @@
       {
         "pattern": "\\b(raye|rayure|graffio|graffiat|scratch)",
         "label": "rayado (fr/it/en)"
+      },
+      {
+        "pattern": "\\b(krassen|kratzer)\\b",
+        "label": "rayado (nl/de)"
       }
     ]
   },
@@ -140,5 +155,6 @@
     "csvPath": "data/found.csv",
     "seenPath": "data/seen.json",
     "seenTtlDays": 30
-  }
+  },
+  "maxVerifyPerPass": 20
 }

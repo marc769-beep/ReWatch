@@ -137,3 +137,15 @@ test('detecta roturas tambien en frances, italiano e ingles', () => {
   const sano = [{ id: 8100, title: 'Montre Apple Watch SE 44mm très bon état', total_item_price: { amount: '55.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Muy bueno' }];
   assert.equal(selectMatches(sano, config).matches.length, 1, 'un anuncio frances sano si debe pasar');
 });
+
+test('detecta accesorios y roturas en holandes y aleman', () => {
+  const raros = [
+    { id: 8201, title: 'Apple Watch SE 40mm gebarsten', total_item_price: { amount: '42.70', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+    { id: 8202, title: 'Bracelet Apple Watch SE 3 40mm', total_item_price: { amount: '47.95', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Nuevo con etiquetas' },
+    { id: 8203, title: 'Apple Watch SE 44mm display kaputt', total_item_price: { amount: '50.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+    { id: 8204, title: 'Cinturino per Apple Watch SE 40mm', total_item_price: { amount: '45.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Nuevo' },
+    { id: 8205, title: 'Apple Watch SE 2 44mm scherm gebroken', total_item_price: { amount: '55.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+  ];
+  const { matches } = selectMatches(raros, config);
+  assert.deepEqual(matches.map((m) => m.id), []);
+});

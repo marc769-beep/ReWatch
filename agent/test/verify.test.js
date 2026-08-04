@@ -32,7 +32,7 @@ function candidate(overrides = {}) {
   };
 }
 
-const clientWith = (description) => ({ itemDetails: async () => ({ description }) });
+const clientWith = (description) => ({ itemDescription: async () => description });
 const noPhoto = async () => null;
 
 test('descarta el anuncio si la ficha completa revela iCloud o rotura', async () => {
@@ -41,7 +41,7 @@ test('descarta el anuncio si la ficha completa revela iCloud o rotura', async ()
     'Funciona bien aunque tiene la pantalla rota en una esquina',
     'Lo vendo para piezas',
   ]) {
-    const kept = await verifyMatches([candidate()], {
+    const { kept } = await verifyMatches([candidate()], {
       client: clientWith(desc),
       config,
       logger: silent,
@@ -52,7 +52,7 @@ test('descarta el anuncio si la ficha completa revela iCloud o rotura', async ()
 });
 
 test('mantiene el anuncio si la ficha completa esta limpia', async () => {
-  const kept = await verifyMatches([candidate()], {
+  const { kept } = await verifyMatches([candidate()], {
     client: clientWith('Muy cuidado, con caja y cargador. Bateria al 95%.'),
     config,
     logger: silent,
@@ -63,7 +63,7 @@ test('mantiene el anuncio si la ficha completa esta limpia', async () => {
 });
 
 test('la ficha completa puede anadir avisos sin descartar', async () => {
-  const kept = await verifyMatches([candidate()], {
+  const { kept } = await verifyMatches([candidate()], {
     client: clientWith('Funciona perfecto, lo vendo sin caja y sin cargador'),
     config,
     logger: silent,
@@ -75,8 +75,8 @@ test('la ficha completa puede anadir avisos sin descartar', async () => {
 });
 
 test('si la ficha no se puede leer, pasa marcado como sin verificar', async () => {
-  const kept = await verifyMatches([candidate()], {
-    client: { itemDetails: async () => { throw new Error('HTTP 500'); } },
+  const { kept } = await verifyMatches([candidate()], {
+    client: { itemDescription: async () => { throw new Error('HTTP 500'); } },
     config,
     logger: silent,
     photoCheck: noPhoto,
@@ -86,7 +86,7 @@ test('si la ficha no se puede leer, pasa marcado como sin verificar', async () =
 });
 
 test('descarta cuando el analisis de foto ve la pantalla rota', async () => {
-  const kept = await verifyMatches([candidate()], {
+  const { kept } = await verifyMatches([candidate()], {
     client: clientWith('Todo perfecto'),
     config,
     logger: silent,
@@ -96,7 +96,7 @@ test('descarta cuando el analisis de foto ve la pantalla rota', async () => {
 });
 
 test('marca photoChecked cuando la foto se analiza y esta bien', async () => {
-  const kept = await verifyMatches([candidate()], {
+  const { kept } = await verifyMatches([candidate()], {
     client: clientWith('Todo perfecto'),
     config,
     logger: silent,
@@ -104,4 +104,34 @@ test('marca photoChecked cuando la foto se analiza y esta bien', async () => {
   });
   assert.equal(kept.length, 1);
   assert.equal(kept[0].photoChecked, true);
+});
+
+test('verifica como mucho maxVerifyPerPass y deja el resto sin procesar', async () => {
+  const many = Array.from({ length: 5 }, (_, i) => candidate({ id: String(6000 + i) }));
+  const capped = { ...config, maxVerifyPerPass: 2 };
+  const { kept, processed } = await verifyMatches(many, {
+    client: clientWith('Todo perfecto'),
+    config: capped,
+    logger: silent,
+    photoCheck: noPhoto,
+  });
+  assert.equal(kept.length, 2);
+  assert.equal(processed.size, 2);
+});
+
+test('un 429 detiene la verificacion sin marcar como procesado lo pendiente', async () => {
+  let calls = 0;
+  const client = {
+    itemDescription: async () => {
+      calls += 1;
+      if (calls === 2) throw Object.assign(new Error('429'), { retryable: true });
+      return 'Todo perfecto';
+    },
+  };
+  const many = [candidate({ id: '7001' }), candidate({ id: '7002' }), candidate({ id: '7003' })];
+  const { kept, processed } = await verifyMatches(many, { client, config, logger: silent, photoCheck: noPhoto });
+  assert.equal(kept.length, 1, 'solo el primero llego a verificarse');
+  assert.ok(processed.has('7001'));
+  assert.ok(!processed.has('7002'), 'el que fallo por 429 se reintenta');
+  assert.ok(!processed.has('7003'));
 });
