@@ -19,6 +19,11 @@
   "catalogIds": [],
 
   "models": {
+    "se": {
+      "label": "Apple Watch SE",
+      "sizePrices": { "44": 70, "40": 60 },
+      "maxPrice": 70
+    },
     "se2": {
       "label": "Apple Watch SE 2",
       "sizePrices": { "44": 70, "40": 60 },

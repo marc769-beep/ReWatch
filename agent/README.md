@@ -26,7 +26,7 @@ node src/index.js --help
 
 ## Qué busca ahora mismo
 
-**Solo Apple Watch SE 2 (2ª generación), en buen estado:**
+**Solo Apple Watch SE (cualquier generación), en buen estado:**
 
 | Tamaño | Precio máximo |
 | --- | --- |
@@ -66,17 +66,12 @@ es añadir una línea:
 Si además pones `"resalePrice": 169` en un modelo, cada resultado incluye el
 margen estimado frente a tu precio de venta.
 
-### Los SE que no dicen la generación
+### Las dos generaciones del SE
 
-Muchos vendedores anuncian un SE 2 simplemente como "Apple Watch SE": por el
-texto no hay forma de saber si es de 2020 o de 2022. Por defecto el agente los
-acepta con el aviso **"generación sin confirmar"** para que los mires tú (mejor
-revisar tres fotos de más que perder una ganga). Si prefieres que solo pasen los
-que dicen explícitamente SE 2 / 2022 / 2023:
-
-```json
-"treatPlainSeAsSe2": false
-```
+Ahora mismo se buscan las dos (`se` y `se2` en `models`, con los mismos topes).
+Para volver a admitir solo la 2ª generación, borra la entrada `se`: los anuncios
+que no digan la generación pasarán marcados con **"generación sin confirmar"**
+(o quedarán descartados si pones `"treatPlainSeAsSe2": false`).
 
 ### Cómo decide
 

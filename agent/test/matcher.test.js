@@ -68,10 +68,10 @@ test('toListing aplana el item de la API', () => {
   assert.equal(l.seller, 'laura');
 });
 
-test('solo pasan los SE 2 dentro del tope de su tamano y en buen estado', () => {
+test('solo pasan los SE (cualquier generacion) dentro del tope de su tamano y en buen estado', () => {
   const { matches } = selectMatches(items, config);
   assert.deepEqual(matches.map((m) => m.id).sort(), ['2001', '2002', '2003', '2006', '2010']);
-  assert.ok(matches.every((m) => m.model === 'se2'));
+  assert.ok(matches.every((m) => m.model === 'se' || m.model === 'se2'));
 });
 
 test('cada descarte explica su motivo', () => {
@@ -104,14 +104,19 @@ test('el tope de 40mm es mas estricto que el de 44mm', () => {
 
 test('marca los anuncios que hay que mirar con lupa', () => {
   const { matches } = selectMatches(items, config);
-  assert.ok(byId(matches, 2003).flags.includes('generacion sin confirmar'));
+  assert.equal(byId(matches, 2003).model, 'se', 'un SE sin generacion es un objetivo directo');
+  assert.deepEqual(byId(matches, 2003).flags, []);
   assert.ok(byId(matches, 2006).flags.includes('tamano sin confirmar'));
   assert.deepEqual(byId(matches, 2010).flags, ['marcas de uso']);
   assert.deepEqual(byId(matches, 2001).flags, [], 'un anuncio limpio no lleva avisos');
 });
 
-test('treatPlainSeAsSe2 desactivado descarta los SE sin generacion', () => {
-  const strict = { ...config, filters: { ...config.filters, treatPlainSeAsSe2: false } };
+test('si solo se busca SE 2, los SE sin generacion pasan marcados (treatPlainSeAsSe2)', () => {
+  const soloSe2 = { ...config, models: { se2: config.models.se2 } };
+  const { matches } = selectMatches(items, soloSe2);
+  assert.ok(byId(matches, 2003).flags.includes('generacion sin confirmar'));
+
+  const strict = { ...soloSe2, filters: { ...config.filters, treatPlainSeAsSe2: false } };
   const { evaluated } = selectMatches(items, strict);
   assert.match(byId(evaluated, 2003).reason, /modelo se fuera de los objetivos/);
 });
