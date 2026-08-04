@@ -75,7 +75,25 @@
       "\\bbateria (al )?[0-7]\\d%",
       "\\bsatisfactorio\\b",
       "\\bpara reparar\\b",
-      "\\btactil no (funciona|responde)\\b"
+      "\\btactil no (funciona|responde)\\b",
+      "\\bfissur",
+      "\\b(vitre|ecran|verre) (casse|brise|fele|fendu)",
+      "\\becran (hs|noir)\\b",
+      "\\b(schermo|vetro|display) (rotto|crepato|incrinato|danneggiato)",
+      "\\b(cracked|broken|shattered|smashed) (screen|glass|display)\\b",
+      "\\b(screen|glass|display) (is )?(cracked|broken|shattered)\\b",
+      "\\bpour pieces\\b",
+      "\\bper (pezzi|ricambi)\\b",
+      "\\bfor parts\\b",
+      "\\bspares or repairs?\\b",
+      "\\bne fonctionne pas\\b",
+      "\\bne s.?allume pas\\b",
+      "\\bnon (funziona|si accende)\\b",
+      "\\b(doesn.?t|does not|won.?t) (work|turn on)\\b",
+      "\\bhors service\\b",
+      "\\bbloque\\b",
+      "\\bbloccato\\b",
+      "\\blocked\\b"
     ],
     "warnPatterns": [
       {
@@ -109,6 +127,10 @@
       {
         "pattern": "\\brot[oa]\\b",
         "label": "menciona roto/rota"
+      },
+      {
+        "pattern": "\\b(raye|rayure|graffio|graffiat|scratch)",
+        "label": "rayado (fr/it/en)"
       }
     ]
   },

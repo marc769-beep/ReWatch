@@ -120,3 +120,20 @@ test('si solo se busca SE 2, los SE sin generacion pasan marcados (treatPlainSeA
   const { evaluated } = selectMatches(items, strict);
   assert.match(byId(evaluated, 2003).reason, /modelo se fuera de los objetivos/);
 });
+
+test('detecta roturas tambien en frances, italiano e ingles', () => {
+  const damaged = [
+    { id: 8001, title: 'Apple Watch SE 44mm Cellular – Fonctionne parfaitement – Vitre fissurée', total_item_price: { amount: '58.35', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+    { id: 8002, title: 'Apple Watch SE 2 40mm écran cassé', total_item_price: { amount: '55.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+    { id: 8003, title: 'Apple Watch SE 44mm schermo rotto', total_item_price: { amount: '50.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+    { id: 8004, title: 'Apple Watch SE 2 44mm cracked screen', total_item_price: { amount: '60.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+    { id: 8005, title: 'Apple Watch SE 40mm ne fonctionne pas', total_item_price: { amount: '45.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+    { id: 8006, title: 'Apple Watch SE 2 44mm per pezzi di ricambio', total_item_price: { amount: '42.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+    { id: 8007, title: 'Apple Watch SE 44mm iCloud locked', total_item_price: { amount: '48.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+  ];
+  const { matches } = selectMatches(damaged, config);
+  assert.deepEqual(matches.map((m) => m.id), [], 'ningun anuncio danado deberia pasar');
+
+  const sano = [{ id: 8100, title: 'Montre Apple Watch SE 44mm très bon état', total_item_price: { amount: '55.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Muy bueno' }];
+  assert.equal(selectMatches(sano, config).matches.length, 1, 'un anuncio frances sano si debe pasar');
+});
