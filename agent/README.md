@@ -3,7 +3,7 @@
 Rastrea Vinted, se queda solo con los Apple Watch que encajan con tus criterios
 (modelo, tamaño, precio máximo, estado) y te avisa **una sola vez** por anuncio.
 
-Sin dependencias: solo Node 18 o superior.
+Sin dependencias: solo Node 20 o superior.
 
 ## Uso rápido
 

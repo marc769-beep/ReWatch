@@ -5,7 +5,7 @@
   "description": "Agente que busca Apple Watches en Vinted segun los criterios de ReWatch",
   "type": "module",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
     "start": "node src/index.js --once",
