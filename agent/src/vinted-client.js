@@ -101,6 +101,16 @@ export class VintedClient {
     return Array.isArray(data?.items) ? data.items : [];
   }
 
+  /**
+   * Ficha completa de un anuncio. Los resultados de busqueda no traen la
+   * descripcion entera, y ahi es donde los vendedores confiesan "bloqueado por
+   * icloud" o "pantalla rota" — de aqui la importancia de esta llamada.
+   */
+  async itemDetails(id) {
+    const data = await this.apiGet(`/api/v2/items/${id}`);
+    return data?.item ?? null;
+  }
+
   /** Recorre varias paginas de una query respetando el retardo entre llamadas. */
   async searchAll({ text, pages = 1, ...rest }) {
     const out = [];

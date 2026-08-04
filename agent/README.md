@@ -26,7 +26,8 @@ node src/index.js --help
 
 ## Qué busca ahora mismo
 
-**Solo Apple Watch SE (cualquier generación), en buen estado:**
+**Solo Apple Watch SE (cualquier generación), en buen estado**, revisando cada
+10 minutos:
 
 | Tamaño | Precio máximo |
 | --- | --- |
@@ -34,9 +35,23 @@ node src/index.js --help
 | 40 mm | 60 € |
 | sin indicar | 70 €, marcado como "tamaño sin confirmar" |
 
-El precio que compara es el **total que pagas** (con protección de compra
-incluida), no el del escaparate. Estados admitidos: nuevo, muy bueno y bueno;
-"satisfactorio" queda fuera. Los demás modelos se descartan.
+Precio mínimo 40 € (por debajo casi siempre es estafa o reloj roto). El precio
+que compara es el **total que pagas** (con protección de compra incluida).
+Estados admitidos: nuevo, muy bueno y bueno; "satisfactorio" queda fuera.
+
+### Verificación en dos pasos
+
+Los resultados de búsqueda de Vinted traen la descripción recortada, así que
+antes de avisar el agente **abre la ficha completa** de cada candidato y la
+relee entera: si ahí aparece "bloqueado por iCloud", "pantalla rota", "para
+piezas", etc., el anuncio se descarta y no te llega. Si la ficha no se puede
+leer, el aviso llega marcado como "descripción sin verificar".
+
+Además, si defines `ANTHROPIC_API_KEY` en `agent/.env` (y ejecutas
+`npm install` una vez), el agente **mira la foto principal** de cada candidato
+con la API de Claude y descarta los relojes con la pantalla visiblemente rota.
+Es opcional y de pago (céntimos por foto analizada); sin la clave, todo lo
+demás funciona igual.
 
 ## Cambiar los criterios (config.json)
 

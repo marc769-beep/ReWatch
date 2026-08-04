@@ -4,9 +4,8 @@
   "perPage": 96,
   "maxPagesPerQuery": 2,
   "requestDelayMs": 1500,
-  "intervalMinutes": 15,
+  "intervalMinutes": 10,
   "jitterSeconds": 90,
-
   "queries": [
     "apple watch se 2",
     "apple watch se 2022",
@@ -15,28 +14,38 @@
     "apple watch se 40mm",
     "apple watch se"
   ],
-
   "catalogIds": [],
-
   "models": {
     "se": {
       "label": "Apple Watch SE",
-      "sizePrices": { "44": 70, "40": 60 },
+      "sizePrices": {
+        "44": 70,
+        "40": 60
+      },
       "maxPrice": 70
     },
     "se2": {
       "label": "Apple Watch SE 2",
-      "sizePrices": { "44": 70, "40": 60 },
+      "sizePrices": {
+        "44": 70,
+        "40": 60
+      },
       "maxPrice": 70
     }
   },
-
   "filters": {
-    "minPriceEur": 30,
+    "minPriceEur": 40,
     "maxPriceEur": 70,
-    "sizesMm": [40, 44],
+    "sizesMm": [
+      40,
+      44
+    ],
     "allowUnknownSize": true,
-    "allowedConditions": ["nuevo", "muy bueno", "bueno"],
+    "allowedConditions": [
+      "nuevo",
+      "muy bueno",
+      "bueno"
+    ],
     "allowUnknownCondition": true,
     "treatPlainSeAsSe2": true,
     "requireAppleWatchInTitle": true,
@@ -64,19 +73,45 @@
       "\\bpantalla (rajada|agrietada|rota)\\b",
       "\\bmuy (rayad[oa]|usad[oa])\\b",
       "\\bbateria (al )?[0-7]\\d%",
-      "\\bsatisfactorio\\b"
+      "\\bsatisfactorio\\b",
+      "\\bpara reparar\\b",
+      "\\btactil no (funciona|responde)\\b"
     ],
     "warnPatterns": [
-      { "pattern": "\\brayad[oa]s?\\b", "label": "rayado" },
-      { "pattern": "\\baranaz", "label": "aranazos" },
-      { "pattern": "\\bmarcas de uso\\b", "label": "marcas de uso" },
-      { "pattern": "\\bgolpe\\b", "label": "golpe" },
-      { "pattern": "\\bsin caja\\b", "label": "sin caja" },
-      { "pattern": "\\bsin cargador\\b", "label": "sin cargador" },
-      { "pattern": "\\bbateria (al )?8\\d%", "label": "bateria al 80-89%" }
+      {
+        "pattern": "\\brayad[oa]s?\\b",
+        "label": "rayado"
+      },
+      {
+        "pattern": "\\baranaz",
+        "label": "aranazos"
+      },
+      {
+        "pattern": "\\bmarcas de uso\\b",
+        "label": "marcas de uso"
+      },
+      {
+        "pattern": "\\bgolpe\\b",
+        "label": "golpe"
+      },
+      {
+        "pattern": "\\bsin caja\\b",
+        "label": "sin caja"
+      },
+      {
+        "pattern": "\\bsin cargador\\b",
+        "label": "sin cargador"
+      },
+      {
+        "pattern": "\\bbateria (al )?8\\d%",
+        "label": "bateria al 80-89%"
+      },
+      {
+        "pattern": "\\brot[oa]\\b",
+        "label": "menciona roto/rota"
+      }
     ]
   },
-
   "output": {
     "consoleLimit": 40,
     "jsonlPath": "data/found.jsonl",

@@ -11,5 +11,8 @@
     "start": "node src/index.js --once",
     "watch": "node src/index.js --watch",
     "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0"
   }
 }
