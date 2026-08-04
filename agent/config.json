@@ -1,0 +1,76 @@
+{
+  "domain": "www.vinted.es",
+  "currency": "EUR",
+  "perPage": 96,
+  "maxPagesPerQuery": 2,
+  "requestDelayMs": 1500,
+  "intervalMinutes": 15,
+  "jitterSeconds": 90,
+
+  "queries": [
+    "apple watch series 6",
+    "apple watch series 7",
+    "apple watch series 8",
+    "apple watch se",
+    "apple watch"
+  ],
+
+  "catalogIds": [],
+
+  "models": {
+    "se": { "label": "Apple Watch SE", "maxPrice": 110 },
+    "se2": { "label": "Apple Watch SE (2ª gen)", "maxPrice": 140 },
+    "s5": { "label": "Apple Watch Series 5", "maxPrice": 100 },
+    "s6": { "label": "Apple Watch Series 6", "maxPrice": 130 },
+    "s7": { "label": "Apple Watch Series 7", "maxPrice": 160 },
+    "s8": { "label": "Apple Watch Series 8", "maxPrice": 200 },
+    "s9": { "label": "Apple Watch Series 9", "maxPrice": 250 }
+  },
+
+  "filters": {
+    "minPriceEur": 30,
+    "maxPriceEur": 250,
+    "sizesMm": [],
+    "allowUnknownSize": true,
+    "allowedConditions": [],
+    "requireAppleWatchInTitle": true,
+    "excludePatterns": [
+      "^\\s*(correa|correas|funda|fundas|protector|cargador|cable|cristal|carcasa)\\b",
+      "\\b(correa|correas|funda|fundas|protector|cargador|cable|carcasa)\\s+(para|de|compatible)\\b",
+      "\\bsolo (correa|funda|cargador|cable|caja)\\b",
+      "\\bsolo caja\\b",
+      "\\bcaja vacia\\b",
+      "\\bsin reloj\\b",
+      "\\bpara piezas\\b",
+      "\\bno funciona\\b",
+      "\\bno enciende\\b",
+      "\\baveriad[oa]\\b",
+      "\\bpantalla rota\\b",
+      "\\bbloquead[oa]\\b",
+      "\\bicloud\\b",
+      "\\brepl?ica\\b",
+      "\\bimitacion\\b",
+      "\\bclon\\b",
+      "\\bfake\\b",
+      "\\bno (es )?original\\b",
+      "\\b(t500|t900|hw\\d+|w26|x8|dt\\d+)\\b"
+    ],
+    "warnPatterns": [
+      "\\brayad[oa]s?\\b",
+      "\\bsin caja\\b",
+      "\\bsin cargador\\b",
+      "\\bbateria (al )?[0-7]?\\d%",
+      "\\bgolpe\\b",
+      "\\barañaz",
+      "\\bcristal (roto|saltado)\\b"
+    ]
+  },
+
+  "output": {
+    "consoleLimit": 40,
+    "jsonlPath": "data/found.jsonl",
+    "csvPath": "data/found.csv",
+    "seenPath": "data/seen.json",
+    "seenTtlDays": 30
+  }
+}

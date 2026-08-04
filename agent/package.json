@@ -1,0 +1,15 @@
+{
+  "name": "rewatch-agent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Agente que busca Apple Watches en Vinted segun los criterios de ReWatch",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node src/index.js --once",
+    "watch": "node src/index.js --watch",
+    "test": "node --test test/*.test.js"
+  }
+}

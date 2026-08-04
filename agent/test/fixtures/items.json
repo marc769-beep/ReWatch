@@ -1,0 +1,106 @@
+[
+  {
+    "id": 1001,
+    "title": "Apple Watch Series 6 44mm GPS azul",
+    "description": "Funciona perfecto, bateria al 92%. Incluye cargador.",
+    "brand_title": "Apple",
+    "size_title": "44 mm",
+    "status": "Muy bueno",
+    "total_item_price": { "amount": "118.50", "currency_code": "EUR" },
+    "price": { "amount": "110.00", "currency_code": "EUR" },
+    "user": { "login": "ana_m" },
+    "favourite_count": 4,
+    "url": "https://www.vinted.es/items/1001"
+  },
+  {
+    "id": 1002,
+    "title": "Se vende Apple Watch Serie 6 40mm rosa",
+    "description": "Como nuevo, con caja.",
+    "brand_title": "Apple",
+    "status": "Bueno",
+    "total_item_price": { "amount": "129.00", "currency_code": "EUR" },
+    "user": { "login": "carlos" },
+    "url": "https://www.vinted.es/items/1002"
+  },
+  {
+    "id": 1003,
+    "title": "Correa para Apple Watch Series 6 44mm silicona",
+    "description": "Correa nueva sin usar",
+    "brand_title": "Apple",
+    "total_item_price": { "amount": "8.00", "currency_code": "EUR" },
+    "url": "https://www.vinted.es/items/1003"
+  },
+  {
+    "id": 1004,
+    "title": "Apple Watch SE 40mm GPS",
+    "description": "Estado impecable",
+    "brand_title": "Apple",
+    "status": "Muy bueno",
+    "total_item_price": { "amount": "99.00", "currency_code": "EUR" },
+    "url": "https://www.vinted.es/items/1004"
+  },
+  {
+    "id": 1005,
+    "title": "Apple Watch SE 2 44mm 2023 cellular",
+    "description": "Segunda generacion, poco uso",
+    "brand_title": "Apple",
+    "total_item_price": { "amount": "132.00", "currency_code": "EUR" },
+    "url": "https://www.vinted.es/items/1005"
+  },
+  {
+    "id": 1006,
+    "title": "Apple Watch Series 8 45mm para piezas",
+    "description": "Pantalla rota, no enciende",
+    "brand_title": "Apple",
+    "total_item_price": { "amount": "60.00", "currency_code": "EUR" },
+    "url": "https://www.vinted.es/items/1006"
+  },
+  {
+    "id": 1007,
+    "title": "Smartwatch T500 estilo Apple Watch",
+    "description": "Replica muy conseguida",
+    "brand_title": "Sin marca",
+    "total_item_price": { "amount": "15.00", "currency_code": "EUR" },
+    "url": "https://www.vinted.es/items/1007"
+  },
+  {
+    "id": 1008,
+    "title": "Apple Watch Series 9 41mm nuevo precintado",
+    "description": "Sin abrir, factura incluida",
+    "brand_title": "Apple",
+    "total_item_price": { "amount": "389.00", "currency_code": "EUR" },
+    "url": "https://www.vinted.es/items/1008"
+  },
+  {
+    "id": 1009,
+    "title": "Apple Watch Ultra 2 49mm titanio",
+    "description": "Impecable",
+    "brand_title": "Apple",
+    "total_item_price": { "amount": "520.00", "currency_code": "EUR" },
+    "url": "https://www.vinted.es/items/1009"
+  },
+  {
+    "id": 1010,
+    "title": "Apple Watch Series 7 45mm bloqueado icloud",
+    "description": "No conozco la cuenta",
+    "brand_title": "Apple",
+    "total_item_price": { "amount": "70.00", "currency_code": "EUR" },
+    "url": "https://www.vinted.es/items/1010"
+  },
+  {
+    "id": 1011,
+    "title": "Apple Watch S7 41mm rayado",
+    "description": "Tiene aranazos en la pantalla pero funciona",
+    "brand_title": "Apple",
+    "total_item_price": { "amount": "140.00", "currency_code": "EUR" },
+    "url": "https://www.vinted.es/items/1011"
+  },
+  {
+    "id": 1012,
+    "title": "Reloj Xiaomi Mi Watch",
+    "description": "No es un Apple",
+    "brand_title": "Xiaomi",
+    "total_item_price": { "amount": "35.00", "currency_code": "EUR" },
+    "url": "https://www.vinted.es/items/1012"
+  }
+]
