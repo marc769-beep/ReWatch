@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadConfig } from '../src/config.js';
 import { verifyMatches } from '../src/verify.js';
+import { extractDescription } from '../src/vinted-client.js';
 
 const config = { ...loadConfig(), requestDelayMs: 0 };
 const silent = { log: () => {}, warn: () => {} };
@@ -134,4 +135,25 @@ test('un 429 detiene la verificacion sin marcar como procesado lo pendiente', as
   assert.ok(processed.has('7001'));
   assert.ok(!processed.has('7002'), 'el que fallo por 429 se reintenta');
   assert.ok(!processed.has('7003'));
+});
+
+test('extractDescription coge el texto del vendedor, no el generico de Vinted', () => {
+  const html = `<html><head>
+    <meta property="og:description" content="Compra Apple Watch SE de segunda mano en Vinted">
+    <script>{"description":"Vinted es la app para comprar y vender ropa de segunda mano","catalog":{"description":"Relojes y complementos"},"item":{"description":"Reloj impecable salvo que la pantalla esta rota por una esquina, se ve perfectamente igual","id":1}}</script>
+  </head></html>`;
+  const text = extractDescription(html);
+  assert.match(text, /pantalla esta rota/, 'debe incluir lo que escribio el vendedor');
+});
+
+test('extractDescription devuelve null cuando no hay nada util', () => {
+  assert.equal(extractDescription('<html><body>hola</body></html>'), null);
+  assert.equal(extractDescription('<html>{"description":"corto"}</html>'), null);
+});
+
+test('un anuncio danado solo en la descripcion larga se descarta', async () => {
+  const html = `<html><script>{"description":"Vinted es la app para comprar y vender ropa de segunda mano","item":{"description":"Todo funciona pero esta bloqueado por icloud y no tengo la cuenta del anterior dueno"}}</script></html>`;
+  const client = { itemDescription: async () => extractDescription(html) };
+  const { kept } = await verifyMatches([candidate()], { client, config, logger: silent, photoCheck: noPhoto });
+  assert.equal(kept.length, 0, 'el iCloud escondido en la descripcion larga debe tumbarlo');
 });
