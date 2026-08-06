@@ -26,18 +26,19 @@ node src/index.js --help
 
 ## Qué busca ahora mismo
 
-**Solo Apple Watch SE (cualquier generación), en buen estado**, revisando cada
-10 minutos:
+Revisando **cada 5 minutos**, en buen estado (nuevo / muy bueno / bueno):
 
-| Tamaño | Precio máximo |
-| --- | --- |
-| 44 mm | 70 € |
-| 40 mm | 60 € |
-| sin indicar | 70 €, marcado como "tamaño sin confirmar" |
+| Modelo | Tamaños | Precio máximo |
+| --- | --- | --- |
+| Apple Watch SE (1ª y 2ª gen) | 44 mm / 40 mm | 70 € / 60 € |
+| Apple Watch SE 3 | 44 mm / 40 mm | 80 € |
+| Apple Watch Series 8 | 45 mm / 41 mm | 70 € |
+| Apple Watch Series 9 | 45 mm / 41 mm | 75 € |
 
 Precio mínimo 40 € (por debajo casi siempre es estafa o reloj roto). El precio
-que compara es el **total que pagas** (con protección de compra incluida).
-Estados admitidos: nuevo, muy bueno y bueno; "satisfactorio" queda fuera.
+que se compara es el **del anuncio, sin la protección de compra** — la
+protección de Vinted (~5 % + 0,70 €) se suma aparte al pagar. Un tamaño que no
+existe para ese modelo (un "SE de 41mm") se descarta por anuncio sospechoso.
 
 ### Verificación en dos pasos
 

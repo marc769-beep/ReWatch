@@ -4,15 +4,16 @@
   "perPage": 96,
   "maxPagesPerQuery": 2,
   "requestDelayMs": 1500,
-  "intervalMinutes": 10,
+  "intervalMinutes": 5,
   "jitterSeconds": 90,
   "queries": [
     "apple watch se 2",
-    "apple watch se 2022",
-    "apple watch se 2023",
+    "apple watch se 3",
+    "apple watch se",
+    "apple watch series 8",
+    "apple watch series 9",
     "apple watch se 44mm",
-    "apple watch se 40mm",
-    "apple watch se"
+    "apple watch se 40mm"
   ],
   "catalogIds": [],
   "models": {
@@ -31,14 +32,40 @@
         "40": 60
       },
       "maxPrice": 70
+    },
+    "se3": {
+      "label": "Apple Watch SE 3",
+      "maxPrice": 80,
+      "sizePrices": {
+        "44": 80,
+        "40": 80
+      }
+    },
+    "s8": {
+      "label": "Apple Watch Series 8",
+      "maxPrice": 70,
+      "sizePrices": {
+        "45": 70,
+        "41": 70
+      }
+    },
+    "s9": {
+      "label": "Apple Watch Series 9",
+      "maxPrice": 75,
+      "sizePrices": {
+        "45": 75,
+        "41": 75
+      }
     }
   },
   "filters": {
     "minPriceEur": 40,
-    "maxPriceEur": 70,
+    "maxPriceEur": 80,
     "sizesMm": [
       40,
-      44
+      41,
+      44,
+      45
     ],
     "allowUnknownSize": true,
     "allowedConditions": [

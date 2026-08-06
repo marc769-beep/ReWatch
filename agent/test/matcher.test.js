@@ -38,9 +38,9 @@ test('detectSizeMm lee el tamano de la caja', () => {
   assert.equal(detectSizeMm(normalize('apple watch se 2')), null);
 });
 
-test('extractPrice prefiere el precio total con proteccion', () => {
-  assert.equal(extractPrice({ total_item_price: { amount: '68.00' }, price: { amount: '62.00' } }), 68);
-  assert.equal(extractPrice({ price: '55' }), 55);
+test('extractPrice usa el precio del vendedor, sin la proteccion', () => {
+  assert.equal(extractPrice({ total_item_price: { amount: '68.00' }, price: { amount: '62.00' } }), 62);
+  assert.equal(extractPrice({ total_item_price: { amount: '68.00' } }), 68);
   assert.equal(extractPrice({}), null);
 });
 
@@ -86,7 +86,7 @@ test('cada descarte explica su motivo', () => {
   assert.match(why(1012), /no parece un Apple Watch/);
   assert.match(why(1005), /por encima del maximo 70/); // SE 2 44mm a 132
   assert.match(why(2004), /por encima del maximo 70/); // SE 2 44mm a 85
-  assert.match(why(2008), /tamano 41mm fuera de los buscados/);
+  assert.match(why(2008), /tamano 41mm no existe en/); // un SE de 41mm no existe
   assert.match(why(2009), /sospechosamente bajo/);
   assert.match(why(2005), /estado "Satisfactorio" no admitido/);
 });
@@ -148,4 +148,41 @@ test('detecta accesorios y roturas en holandes y aleman', () => {
   ];
   const { matches } = selectMatches(raros, config);
   assert.deepEqual(matches.map((m) => m.id), []);
+});
+
+test('reconoce SE 3, Series 8 y Series 9 con sus topes', () => {
+  assert.equal(detectModel(normalize('Apple Watch SE 3 44mm')), 'se3');
+  assert.equal(detectModel(normalize('Apple Watch SE 3ª generación 2025')), 'se3');
+  assert.equal(detectModel(normalize('Apple Watch Series 8 45mm')), 's8');
+  assert.equal(detectModel(normalize('Apple Watch S9 41mm')), 's9');
+
+  const lote = [
+    { id: 9001, title: 'Apple Watch SE 3 44mm 2025', price: { amount: '78.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Muy bueno' },
+    { id: 9002, title: 'Apple Watch SE 3 40mm', price: { amount: '85.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+    { id: 9003, title: 'Apple Watch Series 8 45mm', price: { amount: '65.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+    { id: 9004, title: 'Apple Watch Series 8 41mm', price: { amount: '72.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+    { id: 9005, title: 'Apple Watch Series 9 45mm', price: { amount: '74.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Muy bueno' },
+    { id: 9006, title: 'Apple Watch Series 9 41mm', price: { amount: '79.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+    { id: 9007, title: 'Correa para Apple Watch Series 8 45mm', price: { amount: '10.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Nuevo' },
+    { id: 9008, title: 'Apple Watch Series 8 45mm pantalla rota', price: { amount: '60.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+  ];
+  const { matches, evaluated } = selectMatches(lote, config);
+  assert.deepEqual(matches.map((m) => m.id).sort(), ['9001', '9003', '9005']);
+  assert.match(byId(evaluated, 9002).reason, /por encima del maximo 80/);
+  assert.match(byId(evaluated, 9004).reason, /por encima del maximo 70/);
+  assert.match(byId(evaluated, 9006).reason, /por encima del maximo 75/);
+});
+
+test('el precio comparado es el del vendedor aunque venga el total', () => {
+  const item = {
+    id: 9100,
+    title: 'Apple Watch SE 2 44mm',
+    price: { amount: '68.00', currency_code: 'EUR' },
+    total_item_price: { amount: '72.50', currency_code: 'EUR' },
+    brand_title: 'Apple',
+    status: 'Bueno',
+  };
+  const { matches } = selectMatches([item], config);
+  assert.equal(matches.length, 1, 'con 68 de precio base entra aunque el total con proteccion sea 72.5');
+  assert.equal(matches[0].price, 68);
 });

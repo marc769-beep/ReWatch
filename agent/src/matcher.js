@@ -42,8 +42,12 @@ export function detectModel(normalizedTitle) {
   // nunca cuando es el pronombre castellano ("se vende", "se entrega").
   const VERB = '(?:vende|venden|entrega|regala|envia|acepta|puede|da|lo|la)';
   const seNextToWatch = new RegExp(`\\bwatch\\s*(?:nike\\s*)?se\\b(?!\\s+${VERB}\\b)`).test(t);
-  const seWithSpec = /\bse\b\s*(?:2|ii|gen|generacion|gps|cellular|celular|nike|\d{2}\s*-?\s*mm|\(|20\d{2})/.test(t);
+  const seWithSpec = /\bse\b\s*(?:2|3|ii|iii|gen|generacion|gps|cellular|celular|nike|\d{2}\s*-?\s*mm|\(|20\d{2})/.test(t);
   if (seNextToWatch || seWithSpec) {
+    const thirdGen = /\bse\s*(?:3|iii)\b/.test(t)
+      || /\b(?:3|3a|iii|tercera)\s*(?:gen|generacion)\b/.test(t)
+      || /\b(?:2025|2026)\b/.test(t);
+    if (thirdGen) return 'se3';
     const secondGen = /\bse\s*(?:2|ii)\b/.test(t)
       || /\b(?:2|2a|ii|segunda)\s*(?:gen|generacion)\b/.test(t)
       || /\b(?:2022|2023|2024)\b/.test(t);
@@ -58,9 +62,13 @@ export function detectSizeMm(normalizedTitle) {
   return m ? Number(m[1]) : null;
 }
 
-/** Precio final que paga el comprador (incluye proteccion) cuando Vinted lo expone. */
+/**
+ * Precio del anuncio tal cual lo pone el vendedor (sin la proteccion de
+ * compra de Vinted, que se suma aparte al pagar). Los topes de config se
+ * comparan contra este precio.
+ */
 export function extractPrice(item) {
-  const candidates = [item?.total_item_price, item?.price];
+  const candidates = [item?.price, item?.total_item_price];
   for (const c of candidates) {
     const value = typeof c === 'object' && c !== null ? c.amount : c;
     const n = Number(value);
@@ -78,7 +86,7 @@ export function toListing(item, domain = 'www.vinted.es') {
     title,
     description,
     price: extractPrice(item),
-    currency: item?.total_item_price?.currency_code ?? item?.price?.currency_code ?? 'EUR',
+    currency: item?.price?.currency_code ?? item?.total_item_price?.currency_code ?? 'EUR',
     brand: item?.brand_title ?? '',
     size: item?.size_title ?? '',
     condition: item?.status ?? '',
@@ -191,6 +199,13 @@ export function evaluate(listing, config) {
       result.reason = `tamano ${result.sizeMm}mm fuera de los buscados`;
       return result;
     }
+  }
+
+  // Un tamano que no existe para ese modelo (p. ej. un "SE de 41mm") delata un
+  // anuncio mal etiquetado: mejor fuera.
+  if (result.sizeMm !== null && target.sizePrices && !(String(result.sizeMm) in target.sizePrices)) {
+    result.reason = `tamano ${result.sizeMm}mm no existe en ${result.modelLabel}`;
+    return result;
   }
 
   if (listing.price === null) {
