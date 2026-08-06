@@ -30,7 +30,7 @@ Revisando **cada 5 minutos**, en buen estado (nuevo / muy bueno / bueno):
 
 | Modelo | Tamaños | Precio máximo |
 | --- | --- | --- |
-| Apple Watch SE (1ª y 2ª gen) | 44 mm / 40 mm | 70 € / 60 € |
+| Apple Watch SE 2 | 44 mm / 40 mm | 70 € / 60 € |
 | Apple Watch SE 3 | 44 mm / 40 mm | 80 € |
 | Apple Watch Series 8 | 45 mm / 41 mm | 70 € |
 | Apple Watch Series 9 | 45 mm / 41 mm | 75 € |
@@ -82,12 +82,17 @@ es añadir una línea:
 Si además pones `"resalePrice": 169` en un modelo, cada resultado incluye el
 margen estimado frente a tu precio de venta.
 
-### Las dos generaciones del SE
+### La 1ª generación del SE queda fuera
 
-Ahora mismo se buscan las dos (`se` y `se2` en `models`, con los mismos topes).
-Para volver a admitir solo la 2ª generación, borra la entrada `se`: los anuncios
-que no digan la generación pasarán marcados con **"generación sin confirmar"**
-(o quedarán descartados si pones `"treatPlainSeAsSe2": false`).
+Un anuncio que declara la 1ª generación ("SE 1", "1ª gen", "2020") se descarta.
+Los que solo ponen "Apple Watch SE", sin decir la generación, sí pasan —
+marcados con **"generación sin confirmar"** para que lo compruebes tú.
+
+Para volver a aceptar la 1ª generación, añade su entrada a `models`:
+
+```json
+"se1": { "label": "Apple Watch SE (1ª gen)", "sizePrices": { "44": 70, "40": 60 } }
+```
 
 ### Cómo decide
 

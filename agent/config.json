@@ -20,14 +20,6 @@
   ],
   "catalogIds": [],
   "models": {
-    "se": {
-      "label": "Apple Watch SE",
-      "sizePrices": {
-        "44": 70,
-        "40": 60
-      },
-      "maxPrice": 70
-    },
     "se2": {
       "label": "Apple Watch SE 2",
       "sizePrices": {
@@ -134,7 +126,21 @@
       "\\bdisplayschaden\\b",
       "\\bscherm (kapot|gebarsten|gebroken)\\b",
       "\\briss im (display|glas)\\b",
-      "\\bglasbruch\\b"
+      "\\bglasbruch\\b",
+      "\\bno (carga|coge carga|toma carga|da imagen)\\b",
+      "\\b(pantalla|cristal) levantad[oa]\\b",
+      "\\bse despega\\b",
+      "\\boxidad[oa]\\b",
+      "\\bcon humedad\\b",
+      "\\bmojad[oa]\\b",
+      "\\bsin funcionar\\b",
+      "\\bno se ve (bien|nada)\\b",
+      "\\bpixel(es)? muertos?\\b",
+      "\\bmancha en (la )?pantalla\\b",
+      "\\bne charge pas\\b",
+      "\\bnon carica\\b",
+      "\\b(doesn.?t|won.?t) charge\\b",
+      "\\bwater damage\\b"
     ],
     "warnPatterns": [
       {
@@ -176,6 +182,10 @@
       {
         "pattern": "\\b(krassen|kratzer)\\b",
         "label": "rayado (nl/de)"
+      },
+      {
+        "pattern": "\\bbateria (dura poco|se gasta)",
+        "label": "bateria floja"
       }
     ]
   },

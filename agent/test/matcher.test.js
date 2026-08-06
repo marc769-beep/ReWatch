@@ -68,10 +68,10 @@ test('toListing aplana el item de la API', () => {
   assert.equal(l.seller, 'laura');
 });
 
-test('solo pasan los SE (cualquier generacion) dentro del tope de su tamano y en buen estado', () => {
+test('solo pasan los SE 2 (o sin generacion) dentro del tope de su tamano y en buen estado', () => {
   const { matches } = selectMatches(items, config);
   assert.deepEqual(matches.map((m) => m.id).sort(), ['2001', '2002', '2003', '2006', '2010']);
-  assert.ok(matches.every((m) => m.model === 'se' || m.model === 'se2'));
+  assert.ok(matches.every((m) => m.model === 'se2'));
 });
 
 test('cada descarte explica su motivo', () => {
@@ -104,8 +104,8 @@ test('el tope de 40mm es mas estricto que el de 44mm', () => {
 
 test('marca los anuncios que hay que mirar con lupa', () => {
   const { matches } = selectMatches(items, config);
-  assert.equal(byId(matches, 2003).model, 'se', 'un SE sin generacion es un objetivo directo');
-  assert.deepEqual(byId(matches, 2003).flags, []);
+  assert.equal(byId(matches, 2003).model, 'se2', 'un SE sin generacion pasa como SE 2 marcado');
+  assert.deepEqual(byId(matches, 2003).flags, ['generacion sin confirmar']);
   assert.ok(byId(matches, 2006).flags.includes('tamano sin confirmar'));
   assert.deepEqual(byId(matches, 2010).flags, ['marcas de uso']);
   assert.deepEqual(byId(matches, 2001).flags, [], 'un anuncio limpio no lleva avisos');
@@ -195,4 +195,38 @@ test('reconoce variantes de escritura: mayusculas, sin "series", iwatch', () => 
   assert.equal(detectModel(normalize('iwatch 8 45mm')), 's8');
   assert.equal(detectModel(normalize('Apple Watch 2022 44mm')), null, 'un ano suelto no basta para adivinar el modelo');
   assert.equal(detectSizeMm(normalize('APPLE WATCH SE 44MM')), 44);
+});
+
+test('la 1a generacion del SE se detecta aparte y queda fuera', () => {
+  assert.equal(detectModel(normalize('Apple Watch SE 1 44mm')), 'se1');
+  assert.equal(detectModel(normalize('Apple Watch SE (1ª Gen) 40mm GPS')), 'se1');
+  assert.equal(detectModel(normalize('Apple Watch SE (1 generazione)')), 'se1');
+  assert.equal(detectModel(normalize('Apple Watch SE 2020 44mm')), 'se1');
+  assert.equal(detectModel(normalize('Apple Watch SE gen1 rose gold')), 'se1');
+  assert.equal(detectModel(normalize('Apple Watch SE 2 44mm')), 'se2', 'la 2a gen no se toca');
+  assert.equal(detectModel(normalize('Apple Watch SE 44mm')), 'se', 'sin generacion sigue siendo ambiguo');
+
+  const lote = [
+    { id: 9200, title: 'Apple Watch SE (1ª Gen) 40mm GPS', price: { amount: '55.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Muy bueno' },
+    { id: 9201, title: 'Apple Watch SE 2020 44mm', price: { amount: '58.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+    { id: 9202, title: 'Apple Watch SE 2 44mm', price: { amount: '65.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+    { id: 9203, title: 'Apple Watch SE 44mm', price: { amount: '62.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' },
+  ];
+  const { matches, evaluated } = selectMatches(lote, config);
+  assert.deepEqual(matches.map((m) => m.id).sort(), ['9202', '9203']);
+  assert.match(byId(evaluated, 9200).reason, /modelo se1 fuera de los objetivos/);
+  assert.match(byId(evaluated, 9201).reason, /modelo se1 fuera de los objetivos/);
+  assert.ok(byId(matches, 9203).flags.includes('generacion sin confirmar'));
+});
+
+test('descarta mas formas de reloj estropeado', () => {
+  const rotos = [
+    'Apple Watch SE 2 44mm no carga',
+    'Apple Watch Series 9 45mm cristal levantado',
+    'Apple Watch SE 2 40mm oxidado por dentro',
+    'Apple Watch Series 8 45mm con humedad',
+    'Apple Watch SE 2 44mm pixeles muertos',
+    'Apple Watch Series 8 41mm water damage',
+  ].map((title, i) => ({ id: 9300 + i, title, price: { amount: '60.00', currency_code: 'EUR' }, brand_title: 'Apple', status: 'Bueno' }));
+  assert.deepEqual(selectMatches(rotos, config).matches.map((m) => m.id), []);
 });

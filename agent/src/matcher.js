@@ -16,6 +16,10 @@ export function normalize(text) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
+    // "1\u00aa gen" / "2\u00ba" no se descomponen con NFD: se convierten a mano, porque
+    // muchos vendedores escriben la generacion asi.
+    .replace(/\u00aa/g, 'a')
+    .replace(/\u00ba/g, 'o')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -55,6 +59,13 @@ export function detectModel(normalizedTitle) {
       || /\b(?:3|3a|iii|tercera)\s*(?:gen|generacion)\b/.test(t)
       || /\b(?:2025|2026)\b/.test(t);
     if (thirdGen) return 'se3';
+    // Primera generacion declarada ("SE 1", "1a gen", "2020"): interesa poder
+    // distinguirla para dejarla fuera, no confundirla con un SE sin generacion.
+    const firstGen = /\bse\s*(?:1|i)\b/.test(t)
+      || /\b(?:1|1a|1st|i|primera|prima)\s*(?:gen|generacion|generazione|generation|generatie)\b/.test(t)
+      || /\bgen\s*-?\s*1\b/.test(t)
+      || /\b(?:2020|2021)\b/.test(t);
+    if (firstGen) return 'se1';
     const secondGen = /\bse\s*(?:2|ii)\b/.test(t)
       || /\b(?:2|2a|ii|segunda)\s*(?:gen|generacion)\b/.test(t)
       || /\b(?:2022|2023|2024)\b/.test(t);
