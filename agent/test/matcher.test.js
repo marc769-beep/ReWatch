@@ -186,3 +186,13 @@ test('el precio comparado es el del vendedor aunque venga el total', () => {
   assert.equal(matches.length, 1, 'con 68 de precio base entra aunque el total con proteccion sea 72.5');
   assert.equal(matches[0].price, 68);
 });
+
+test('reconoce variantes de escritura: mayusculas, sin "series", iwatch', () => {
+  assert.equal(detectModel(normalize('APPLE WATCH SE 2022 44MM')), 'se2');
+  assert.equal(detectModel(normalize('Apple Watch 8 45mm')), 's8');
+  assert.equal(detectModel(normalize('apple watch 9 41 mm')), 's9');
+  assert.equal(detectModel(normalize('iWatch SE 40mm')), 'se');
+  assert.equal(detectModel(normalize('iwatch 8 45mm')), 's8');
+  assert.equal(detectModel(normalize('Apple Watch 2022 44mm')), null, 'un ano suelto no basta para adivinar el modelo');
+  assert.equal(detectSizeMm(normalize('APPLE WATCH SE 44MM')), 44);
+});

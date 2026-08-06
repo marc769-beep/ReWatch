@@ -38,6 +38,13 @@ export function detectModel(normalizedTitle) {
     if (n >= 1 && n <= 10) return `s${n}`;
   }
 
+  // "apple watch 8" / "iwatch 9" a secas, sin la palabra "series"
+  const bare = t.match(/\b(?:apple\s*watch|iwatch)\s+(\d{1,2})\b/);
+  if (bare) {
+    const n = Number(bare[1]);
+    if (n >= 1 && n <= 10) return `s${n}`;
+  }
+
   // "se" solo cuenta como modelo si va pegado al reloj o a un dato del reloj,
   // nunca cuando es el pronombre castellano ("se vende", "se entrega").
   const VERB = '(?:vende|venden|entrega|regala|envia|acepta|puede|da|lo|la)';
