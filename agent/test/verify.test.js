@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadConfig } from '../src/config.js';
 import { verifyMatches } from '../src/verify.js';
-import { extractDescription } from '../src/vinted-client.js';
 
 const config = { ...loadConfig(), requestDelayMs: 0 };
 const silent = { log: () => {}, warn: () => {} };
@@ -135,17 +134,4 @@ test('un 429 detiene la verificacion sin marcar como procesado lo pendiente', as
   assert.ok(processed.has('7001'));
   assert.ok(!processed.has('7002'), 'el que fallo por 429 se reintenta');
   assert.ok(!processed.has('7003'));
-});
-
-test('extractDescription se queda con el texto del vendedor, no con el generico', () => {
-  const html = `<html><head>
-    <meta property="og:description" content="Compra Apple Watch SE de segunda mano en Vinted">
-    <script>{"description":"Vinted es el sitio para comprar y vender ropa de segunda mano","items":[{"description":"Reloj en buen estado pero la pantalla esta rota por una esquina, se ve igual","id":1}]}</script>
-  </head></html>`;
-  const text = extractDescription(html);
-  assert.match(text, /pantalla esta rota/, 'debe incluir lo que escribio el vendedor');
-});
-
-test('extractDescription devuelve null si no hay nada util', () => {
-  assert.equal(extractDescription('<html><body>hola</body></html>'), null);
 });

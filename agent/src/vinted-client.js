@@ -18,44 +18,6 @@ export function decodeHtmlEntities(s) {
     .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)));
 }
 
-/**
- * Saca la descripcion del vendedor del HTML de un anuncio.
- *
- * La pagina trae varios campos "description" (textos del propio Vinted,
- * categorias, etc.), asi que quedarse con el primero devolvia casi siempre
- * texto generico y los filtros no veian lo que escribio el vendedor. Aqui se
- * recogen todos los candidatos y se juntan los que parecen texto real: para
- * detectar "pantalla rota" o "icloud" es mejor mirar de mas que de menos.
- */
-export function extractDescription(html) {
-  const candidates = [];
-
-  for (const m of html.matchAll(/"description"\s*:\s*"((?:[^"\\]|\\.)*)"/g)) {
-    try {
-      candidates.push(JSON.parse(`"${m[1]}"`));
-    } catch {
-      // fragmento con escapes raros: se ignora
-    }
-  }
-
-  const og = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']*)["']/i)
-    ?? html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+property=["']og:description["']/i);
-  if (og) candidates.push(decodeHtmlEntities(og[1]));
-
-  const seen = new Set();
-  const useful = [];
-  for (const c of candidates) {
-    const text = (c ?? '').replace(/\s+/g, ' ').trim();
-    if (text.length < 15 || seen.has(text)) continue;
-    seen.add(text);
-    useful.push(text);
-  }
-  if (!useful.length) return null;
-
-  // Los textos mas largos son los que suele escribir el vendedor.
-  return useful.sort((a, b) => b.length - a.length).slice(0, 4).join(' \n');
-}
-
 export class VintedClient {
   constructor({ domain = 'www.vinted.es', requestDelayMs = 1500, fetchImpl = fetch, logger = console } = {}) {
     this.domain = domain;
@@ -172,7 +134,23 @@ export class VintedClient {
     }
     if (!res.ok) return null;
     const html = await res.text();
-    return extractDescription(html);
+
+    // JSON embebido en la pagina (JSON-LD del producto o estado de la app)
+    const embedded = html.match(/"description"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+    if (embedded) {
+      try {
+        const text = JSON.parse(`"${embedded[1]}"`);
+        if (text.trim()) return text;
+      } catch {
+        // JSON raro: probamos con og:description
+      }
+    }
+
+    const og = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']*)["']/i)
+      ?? html.match(/<meta[^>]+content=["']([^"']*)["'][^>]+property=["']og:description["']/i);
+    if (og && og[1].trim()) return decodeHtmlEntities(og[1]);
+
+    return null;
   }
 
   /** Recorre varias paginas de una query respetando el retardo entre llamadas. */

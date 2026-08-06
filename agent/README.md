@@ -26,19 +26,18 @@ node src/index.js --help
 
 ## Qué busca ahora mismo
 
-Revisando **cada 5 minutos**, en buen estado (nuevo / muy bueno / bueno):
+**Solo Apple Watch SE (cualquier generación), en buen estado**, revisando cada
+10 minutos:
 
-| Modelo | Tamaños | Precio máximo |
-| --- | --- | --- |
-| Apple Watch SE 2 | 44 mm / 40 mm | 70 € / 60 € |
-| Apple Watch SE 3 | 44 mm / 40 mm | 80 € |
-| Apple Watch Series 8 | 45 mm / 41 mm | 70 € |
-| Apple Watch Series 9 | 45 mm / 41 mm | 75 € |
+| Tamaño | Precio máximo |
+| --- | --- |
+| 44 mm | 70 € |
+| 40 mm | 60 € |
+| sin indicar | 70 €, marcado como "tamaño sin confirmar" |
 
 Precio mínimo 40 € (por debajo casi siempre es estafa o reloj roto). El precio
-que se compara es el **del anuncio, sin la protección de compra** — la
-protección de Vinted (~5 % + 0,70 €) se suma aparte al pagar. Un tamaño que no
-existe para ese modelo (un "SE de 41mm") se descarta por anuncio sospechoso.
+que compara es el **total que pagas** (con protección de compra incluida).
+Estados admitidos: nuevo, muy bueno y bueno; "satisfactorio" queda fuera.
 
 ### Verificación en dos pasos
 
@@ -82,17 +81,12 @@ es añadir una línea:
 Si además pones `"resalePrice": 169` en un modelo, cada resultado incluye el
 margen estimado frente a tu precio de venta.
 
-### La 1ª generación del SE queda fuera
+### Las dos generaciones del SE
 
-Un anuncio que declara la 1ª generación ("SE 1", "1ª gen", "2020") se descarta.
-Los que solo ponen "Apple Watch SE", sin decir la generación, sí pasan —
-marcados con **"generación sin confirmar"** para que lo compruebes tú.
-
-Para volver a aceptar la 1ª generación, añade su entrada a `models`:
-
-```json
-"se1": { "label": "Apple Watch SE (1ª gen)", "sizePrices": { "44": 70, "40": 60 } }
-```
+Ahora mismo se buscan las dos (`se` y `se2` en `models`, con los mismos topes).
+Para volver a admitir solo la 2ª generación, borra la entrada `se`: los anuncios
+que no digan la generación pasarán marcados con **"generación sin confirmar"**
+(o quedarán descartados si pones `"treatPlainSeAsSe2": false`).
 
 ### Cómo decide
 

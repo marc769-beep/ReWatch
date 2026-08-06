@@ -16,10 +16,6 @@ export function normalize(text) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    // "1\u00aa gen" / "2\u00ba" no se descomponen con NFD: se convierten a mano, porque
-    // muchos vendedores escriben la generacion asi.
-    .replace(/\u00aa/g, 'a')
-    .replace(/\u00ba/g, 'o')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -42,30 +38,12 @@ export function detectModel(normalizedTitle) {
     if (n >= 1 && n <= 10) return `s${n}`;
   }
 
-  // "apple watch 8" / "iwatch 9" a secas, sin la palabra "series"
-  const bare = t.match(/\b(?:apple\s*watch|iwatch)\s+(\d{1,2})\b/);
-  if (bare) {
-    const n = Number(bare[1]);
-    if (n >= 1 && n <= 10) return `s${n}`;
-  }
-
   // "se" solo cuenta como modelo si va pegado al reloj o a un dato del reloj,
   // nunca cuando es el pronombre castellano ("se vende", "se entrega").
   const VERB = '(?:vende|venden|entrega|regala|envia|acepta|puede|da|lo|la)';
   const seNextToWatch = new RegExp(`\\bwatch\\s*(?:nike\\s*)?se\\b(?!\\s+${VERB}\\b)`).test(t);
-  const seWithSpec = /\bse\b\s*(?:2|3|ii|iii|gen|generacion|gps|cellular|celular|nike|\d{2}\s*-?\s*mm|\(|20\d{2})/.test(t);
+  const seWithSpec = /\bse\b\s*(?:2|ii|gen|generacion|gps|cellular|celular|nike|\d{2}\s*-?\s*mm|\(|20\d{2})/.test(t);
   if (seNextToWatch || seWithSpec) {
-    const thirdGen = /\bse\s*(?:3|iii)\b/.test(t)
-      || /\b(?:3|3a|iii|tercera)\s*(?:gen|generacion)\b/.test(t)
-      || /\b(?:2025|2026)\b/.test(t);
-    if (thirdGen) return 'se3';
-    // Primera generacion declarada ("SE 1", "1a gen", "2020"): interesa poder
-    // distinguirla para dejarla fuera, no confundirla con un SE sin generacion.
-    const firstGen = /\bse\s*(?:1|i)\b/.test(t)
-      || /\b(?:1|1a|1st|i|primera|prima)\s*(?:gen|generacion|generazione|generation|generatie)\b/.test(t)
-      || /\bgen\s*-?\s*1\b/.test(t)
-      || /\b(?:2020|2021)\b/.test(t);
-    if (firstGen) return 'se1';
     const secondGen = /\bse\s*(?:2|ii)\b/.test(t)
       || /\b(?:2|2a|ii|segunda)\s*(?:gen|generacion)\b/.test(t)
       || /\b(?:2022|2023|2024)\b/.test(t);
@@ -80,13 +58,9 @@ export function detectSizeMm(normalizedTitle) {
   return m ? Number(m[1]) : null;
 }
 
-/**
- * Precio del anuncio tal cual lo pone el vendedor (sin la proteccion de
- * compra de Vinted, que se suma aparte al pagar). Los topes de config se
- * comparan contra este precio.
- */
+/** Precio final que paga el comprador (incluye proteccion) cuando Vinted lo expone. */
 export function extractPrice(item) {
-  const candidates = [item?.price, item?.total_item_price];
+  const candidates = [item?.total_item_price, item?.price];
   for (const c of candidates) {
     const value = typeof c === 'object' && c !== null ? c.amount : c;
     const n = Number(value);
@@ -104,7 +78,7 @@ export function toListing(item, domain = 'www.vinted.es') {
     title,
     description,
     price: extractPrice(item),
-    currency: item?.price?.currency_code ?? item?.total_item_price?.currency_code ?? 'EUR',
+    currency: item?.total_item_price?.currency_code ?? item?.price?.currency_code ?? 'EUR',
     brand: item?.brand_title ?? '',
     size: item?.size_title ?? '',
     condition: item?.status ?? '',
@@ -217,13 +191,6 @@ export function evaluate(listing, config) {
       result.reason = `tamano ${result.sizeMm}mm fuera de los buscados`;
       return result;
     }
-  }
-
-  // Un tamano que no existe para ese modelo (p. ej. un "SE de 41mm") delata un
-  // anuncio mal etiquetado: mejor fuera.
-  if (result.sizeMm !== null && target.sizePrices && !(String(result.sizeMm) in target.sizePrices)) {
-    result.reason = `tamano ${result.sizeMm}mm no existe en ${result.modelLabel}`;
-    return result;
   }
 
   if (listing.price === null) {
