@@ -85,7 +85,8 @@ export function loadDotEnv(file = '.env') {
   } catch {
     return;
   }
-  for (const line of raw.split('\n')) {
+  // split tolerante con los finales de linea de Windows (\r\n)
+  for (const line of raw.split(/\r?\n/)) {
     const m = line.match(/^\s*(?:export\s+)?([A-Z_][A-Z0-9_]*)\s*=\s*(.*)\s*$/);
     if (!m || line.trim().startsWith('#')) continue;
     const value = m[2].replace(/^["']|["']$/g, '');

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { loadConfig, loadDotEnv, resolvePath } from './config.js';
 import { VintedClient, sleep } from './vinted-client.js';
 import { selectMatches } from './matcher.js';
@@ -153,7 +154,10 @@ async function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// pathToFileURL, y no `file://` a mano: en Windows argv[1] llega como
+// C:\Users\... y la comparacion nunca cuadraba, asi que el agente se cerraba
+// sin ejecutar nada.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((err) => {
     console.error(err);
     process.exit(1);
