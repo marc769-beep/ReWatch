@@ -4,7 +4,7 @@
   "perPage": 96,
   "maxPagesPerQuery": 2,
   "requestDelayMs": 1500,
-  "intervalMinutes": 10,
+  "intervalMinutes": 5,
   "jitterSeconds": 90,
   "queries": [
     "apple watch se 2",
