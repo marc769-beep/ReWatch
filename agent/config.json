@@ -2,9 +2,9 @@
   "domain": "www.vinted.es",
   "currency": "EUR",
   "perPage": 96,
-  "maxPagesPerQuery": 2,
+  "maxPagesPerQuery": 1,
   "requestDelayMs": 1500,
-  "intervalMinutes": 5,
+  "intervalMinutes": 2.5,
   "jitterSeconds": 90,
   "queries": [
     "apple watch se 2",

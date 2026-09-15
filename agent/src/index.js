@@ -218,7 +218,10 @@ async function main() {
     }
     const jitter = Math.random() * config.jitterSeconds * 1000;
     const wait = config.intervalMinutes * 60 * 1000 * backoff + jitter;
-    console.log(`Siguiente revision en ${Math.round(wait / 60000)} min\n`);
+    // Con intervalos por debajo del minuto y medio, redondear a minutos daba
+    // un "0 min" o un "3 min" que no se parecia a la espera real.
+    const cuanto = wait < 120000 ? `${Math.round(wait / 1000)} s` : `${Math.round(wait / 60000)} min`;
+    console.log(`Siguiente revision en ${cuanto}\n`);
     await sleep(wait);
   }
 }
