@@ -110,8 +110,12 @@ export class VintedClient {
       },
     });
 
-    if ((res.status === 401 || res.status === 403) && retryOnAuth) {
-      this.logger.warn?.(`Sesion caducada (HTTP ${res.status}), renovando cookies...`);
+    // 401/403 es la sesion caducada de toda la vida. El 404 se apunta aqui
+    // tambien: Vinted responde 404 (y no 401) cuando deja de aceptar la sesion
+    // anonima o cuando esta frenando a un cliente que pide demasiado, asi que
+    // el arreglo es el mismo, pedir cookies nuevas y reintentar una vez.
+    if ((res.status === 401 || res.status === 403 || res.status === 404) && retryOnAuth) {
+      this.logger.warn?.(`Vinted respondio HTTP ${res.status}; renovando la sesion y reintentando...`);
       this.cookies.clear();
       await this.bootstrap();
       await sleep(this.requestDelayMs);
@@ -120,6 +124,14 @@ export class VintedClient {
 
     if (res.status === 429) {
       throw Object.assign(new Error('Vinted esta limitando las peticiones (429)'), { retryable: true });
+    }
+    if (res.status === 404) {
+      // Ya se reintento con sesion nueva: es Vinted quien no quiere responder,
+      // no un fallo del agente. Pasajero, se vuelve a probar en la proxima pasada.
+      throw Object.assign(
+        new Error(`Vinted respondio 404 en ${path} (sesion rechazada o peticiones limitadas)`),
+        { retryable: true },
+      );
     }
     if (!res.ok) {
       throw new Error(`GET ${path} -> HTTP ${res.status}`);
@@ -178,7 +190,16 @@ export class VintedClient {
   async searchAll({ text, pages = 1, ...rest }) {
     const out = [];
     for (let page = 1; page <= pages; page += 1) {
-      const items = await this.search({ text, page, ...rest });
+      let items;
+      try {
+        items = await this.search({ text, page, ...rest });
+      } catch (err) {
+        // Si falla la primera pagina no hay nada que salvar y el error sube.
+        // Si falla una posterior, se devuelve lo ya recogido en vez de tirarlo.
+        if (page === 1) throw err;
+        this.logger.warn?.(`  "${text}" pagina ${page}: ${err.message}`);
+        break;
+      }
       out.push(...items);
       if (items.length === 0) break;
       if (page < pages) await sleep(this.requestDelayMs);

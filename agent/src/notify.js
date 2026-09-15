@@ -64,8 +64,8 @@ export async function sendTelegram(matches, { logger = console } = {}) {
       body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: false }),
     });
     if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      logger.warn?.(`FALLO el aviso por Telegram (HTTP ${res.status}: ${body.description ?? 'sin detalle'})`);
+      const detail = await res.json().catch(() => ({}));
+      logger.warn?.(`FALLO el aviso por Telegram (HTTP ${res.status}: ${detail.description ?? 'sin detalle'})`);
       return false;
     }
     logger.log(`Aviso enviado a Telegram (${Math.min(matches.length, 10)} de ${matches.length} anuncios en el mensaje).`);
@@ -206,6 +206,11 @@ export async function sendWebhook(matches, { logger = console } = {}) {
   }
 }
 
+/**
+ * Muestra, guarda y avisa. Devuelve { delivered }: false solo cuando Telegram
+ * esta configurado y el mensaje no llego, para que quien llama pueda reintentar
+ * en vez de dar el anuncio por avisado.
+ */
 export async function notify(matches, config, { logger = console } = {}) {
   const limit = config.output.consoleLimit;
   logger.log(`\n${matches.length} anuncio(s) nuevos que encajan:\n`);
@@ -214,5 +219,8 @@ export async function notify(matches, config, { logger = console } = {}) {
 
   appendJsonl(config.output.jsonlPath, matches);
   appendCsv(config.output.csvPath, matches);
-  await Promise.all([sendTelegram(matches, { logger }), sendWebhook(matches, { logger })]);
+  const [telegram] = await Promise.all([sendTelegram(matches, { logger }), sendWebhook(matches, { logger })]);
+
+  // Sin Telegram configurado el aviso es la consola y el CSV, que no fallan.
+  return { delivered: telegramConfigured() ? telegram : true };
 }

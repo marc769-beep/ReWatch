@@ -20,9 +20,19 @@ Otras opciones:
 ```bash
 node src/index.js --once --show-rejected          # explica por qué descarta cada anuncio
 node src/index.js --once --max-price 150          # precio máximo puntual
+node src/index.js --diagnose                      # ¿Vinted está respondiendo?
 node src/index.js --once --fixture test/fixtures/items.json --no-store   # prueba sin red
 node src/index.js --help
 ```
+
+### Cuando el agente dice `HTTP 404` o `HTTP 429`
+
+No es un fallo del agente: es Vinted frenando a tu conexión por pedir
+demasiado. El agente lo aguanta solo (renueva la sesión, sigue con las demás
+búsquedas y espera más entre pasadas), pero si se repite sin parar, reduce el
+número de agentes encendidos a la vez o sube `intervalMinutes`. Varios agentes
+buscando cada pocos segundos desde la misma casa es lo que lo provoca.
+Ejecuta `node src/index.js --diagnose` para confirmarlo.
 
 ## Qué busca ahora mismo
 
