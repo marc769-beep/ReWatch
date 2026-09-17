@@ -69,6 +69,25 @@ export function extractPrice(item) {
   return null;
 }
 
+/** Quita el "www." para poder comparar dominios sin falsos negativos. */
+const hostBase = (h) => String(h ?? '').toLowerCase().replace(/^www\./, '');
+
+/**
+ * Pais del anuncio, deducido del dominio que devuelve Vinted.
+ *
+ * Vinted da la url en el sitio del vendedor (vinted.de, vinted.fr...), asi que
+ * ese dominio es la forma mas fiable de saber de donde es el anuncio sin
+ * depender de campos de la API que pueden cambiar de nombre. Devuelve null si
+ * no se puede saber, y en ese caso no se descarta nada.
+ */
+export function sourceHost(item) {
+  try {
+    return hostBase(new URL(item.url).host);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Enlace al anuncio en NUESTRO dominio.
  *
@@ -109,6 +128,7 @@ export function toListing(item, domain = 'www.vinted.es') {
     favourites: item?.favourite_count ?? 0,
     photo: item?.photo?.url ?? item?.photos?.[0]?.url ?? '',
     url: listingUrl(item, domain),
+    sourceHost: sourceHost(item),
     createdAt: item?.photo?.high_resolution?.timestamp
       ? new Date(item.photo.high_resolution.timestamp * 1000).toISOString()
       : null,
@@ -172,6 +192,14 @@ export function evaluate(listing, config) {
 
   if (f.requireAppleWatchInTitle && !APPLE_WATCH_RE.test(haystack)) {
     result.reason = 'no parece un Apple Watch';
+    return result;
+  }
+
+  // Un anuncio de otro pais no sirve: aunque se abra en vinted.es, si el
+  // vendedor no envia a Espana no se puede ni comprar ni escribirle. Mejor no
+  // avisar que hacer perder el tiempo abriendo anuncios imposibles.
+  if (f.soloPaisPropio && listing.sourceHost && listing.sourceHost !== hostBase(config.domain)) {
+    result.reason = `anuncio de otro pais (${listing.sourceHost})`;
     return result;
   }
 

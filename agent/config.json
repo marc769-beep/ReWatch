@@ -147,7 +147,8 @@
         "pattern": "\\b(krassen|kratzer)\\b",
         "label": "rayado (nl/de)"
       }
-    ]
+    ],
+    "soloPaisPropio": true
   },
   "output": {
     "consoleLimit": 40,

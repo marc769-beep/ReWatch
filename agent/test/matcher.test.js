@@ -6,6 +6,7 @@ import {
   checkCondition,
   detectModel,
   detectSizeMm,
+  evaluate,
   extractPrice,
   normalize,
   priceCap,
@@ -59,6 +60,30 @@ test('checkCondition compara por inclusion, no por igualdad exacta', () => {
   assert.equal(checkCondition('Satisfactorio', f).ok, false);
   assert.equal(checkCondition('', f).flag, 'estado sin especificar');
   assert.equal(checkCondition('', { ...f, allowUnknownCondition: false }).ok, false);
+});
+
+test('los anuncios de otros paises no se avisan', () => {
+  const base = {
+    title: 'Apple Watch SE 2 44mm',
+    price: { amount: '60.0', currency_code: 'EUR' },
+    status: 'Muy bueno',
+  };
+
+  for (const host of ['www.vinted.de', 'www.vinted.fr', 'www.vinted.it', 'vinted.pl']) {
+    const e = evaluate(toListing({ ...base, id: 1, url: `https://${host}/items/1-reloj` }, 'www.vinted.es'), config);
+    assert.equal(e.match, false, `${host} deberia descartarse`);
+    assert.match(e.reason, /otro pais/);
+  }
+
+  // El de casa pasa, con y sin "www."
+  for (const host of ['www.vinted.es', 'vinted.es']) {
+    const e = evaluate(toListing({ ...base, id: 2, url: `https://${host}/items/2-reloj` }, 'www.vinted.es'), config);
+    assert.equal(e.match, true, `${host} deberia pasar`);
+  }
+
+  // Sin url no se puede saber el pais: no se descarta por eso.
+  const sinUrl = evaluate(toListing({ ...base, id: 3 }, 'www.vinted.es'), config);
+  assert.equal(sinUrl.match, true);
 });
 
 test('los anuncios de otros paises se enlazan al Vinted de casa', () => {
