@@ -148,7 +148,17 @@
         "label": "rayado (nl/de)"
       }
     ],
-    "soloPaisPropio": true
+    "paisesPermitidos": [
+      "es",
+      "fr",
+      "it",
+      "nl",
+      "be",
+      "pt",
+      "lu",
+      "ie",
+      "at"
+    ]
   },
   "output": {
     "consoleLimit": 40,

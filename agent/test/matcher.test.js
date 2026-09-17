@@ -62,53 +62,45 @@ test('checkCondition compara por inclusion, no por igualdad exacta', () => {
   assert.equal(checkCondition('', { ...f, allowUnknownCondition: false }).ok, false);
 });
 
-test('los anuncios de otros paises no se avisan', () => {
-  const base = {
-    title: 'Apple Watch SE 2 44mm',
-    price: { amount: '60.0', currency_code: 'EUR' },
-    status: 'Muy bueno',
-  };
+const anuncio = (host, id = 1) => toListing({
+  id,
+  title: 'Apple Watch SE 2 44mm',
+  price: { amount: '60.0', currency_code: 'EUR' },
+  status: 'Muy bueno',
+  url: host ? `https://${host}/items/${id}-reloj` : undefined,
+}, 'www.vinted.es');
 
-  for (const host of ['www.vinted.de', 'www.vinted.fr', 'www.vinted.it', 'vinted.pl']) {
-    const e = evaluate(toListing({ ...base, id: 1, url: `https://${host}/items/1-reloj` }, 'www.vinted.es'), config);
-    assert.equal(e.match, false, `${host} deberia descartarse`);
-    assert.match(e.reason, /otro pais/);
-  }
-
-  // El de casa pasa, con y sin "www."
-  for (const host of ['www.vinted.es', 'vinted.es']) {
-    const e = evaluate(toListing({ ...base, id: 2, url: `https://${host}/items/2-reloj` }, 'www.vinted.es'), config);
-    assert.equal(e.match, true, `${host} deberia pasar`);
-  }
-
-  // Sin url no se puede saber el pais: no se descarta por eso.
-  const sinUrl = evaluate(toListing({ ...base, id: 3 }, 'www.vinted.es'), config);
-  assert.equal(sinUrl.match, true);
-});
-
-test('los anuncios de otros paises se enlazan al Vinted de casa', () => {
-  const alemania = {
-    id: 4242,
-    title: 'Apple Watch SE 44mm',
-    url: 'https://www.vinted.de/items/4242-apple-watch-se-44mm',
-  };
-  const listing = toListing(alemania, 'www.vinted.es');
-  assert.equal(
-    listing.url,
-    'https://www.vinted.es/items/4242-apple-watch-se-44mm',
-    'en vinted.de no hay sesion: no se puede comprar ni escribir al vendedor',
-  );
-
-  // Francia, Italia y cualquier otro pais, igual.
-  for (const host of ['www.vinted.fr', 'www.vinted.it', 'www.vinted.nl', 'www.vinted.pl']) {
-    const l = toListing({ id: 7, url: `https://${host}/items/7-reloj` }, 'www.vinted.es');
-    assert.equal(l.url, 'https://www.vinted.es/items/7-reloj');
+test('Francia, Italia y Holanda SIGUEN pasando: ahi se compra bien', () => {
+  for (const host of ['www.vinted.fr', 'www.vinted.it', 'www.vinted.nl', 'www.vinted.be', 'www.vinted.pt']) {
+    const e = evaluate(anuncio(host), config);
+    assert.equal(e.match, true, `${host} NO se puede perder, es negocio`);
   }
 });
 
-test('si Vinted no da url, se construye con el id', () => {
+test('solo se descartan los paises que se hayan quitado de la lista', () => {
+  const e = evaluate(anuncio('www.vinted.de'), config);
+  assert.equal(e.match, false);
+  assert.match(e.reason, /pais no admitido \(vinted\.de\)/);
+});
+
+test('sin lista de paises no se filtra nada', () => {
+  const sinFiltro = { ...config, filters: { ...config.filters, paisesPermitidos: [] } };
+  for (const host of ['www.vinted.de', 'www.vinted.pl', 'www.vinted.lt']) {
+    assert.equal(evaluate(anuncio(host), sinFiltro).match, true);
+  }
+});
+
+test('el pais viaja con el anuncio para poder verlo en el aviso', () => {
+  assert.equal(anuncio('www.vinted.fr').pais, 'fr');
+  assert.equal(anuncio('vinted.it').pais, 'it');
+  assert.equal(anuncio(null).pais, null);
+  assert.equal(evaluate(anuncio('www.vinted.nl'), config).pais, 'nl');
+});
+
+test('el enlace se deja tal cual lo da Vinted, sin reescribir el dominio', () => {
+  // Reescribirlo rompia lo que ya funcionaba: en vinted.fr se compra igual.
+  assert.equal(anuncio('www.vinted.fr', 7).url, 'https://www.vinted.fr/items/7-reloj');
   assert.equal(toListing({ id: 55 }, 'www.vinted.es').url, 'https://www.vinted.es/items/55');
-  assert.equal(toListing({ id: 55, url: 'no-es-una-url' }, 'www.vinted.es').url, 'https://www.vinted.es/items/55');
   assert.equal(toListing({}, 'www.vinted.es').url, '');
 });
 

@@ -89,26 +89,24 @@ export function sourceHost(item) {
 }
 
 /**
- * Enlace al anuncio en NUESTRO dominio.
+ * Codigo de pais del anuncio a partir del dominio ("vinted.fr" -> "fr").
+ * Null si no se puede saber.
+ */
+export function countryCode(item) {
+  const host = sourceHost(item);
+  const m = host?.match(/^vinted\.(.+)$/);
+  return m ? m[1] : null;
+}
+
+/**
+ * Enlace del anuncio tal cual lo da Vinted.
  *
- * Vinted devuelve la url del pais del vendedor (vinted.de, vinted.fr...), y
- * ahi el comprador no tiene sesion iniciada: no puede comprar ni escribir al
- * vendedor, solo recibe un error. El anuncio es el mismo en todos los dominios
- * y el identificador es global, asi que se conserva la ruta y se cambia el
- * dominio por el de casa.
+ * No se reescribe el dominio: comprar en vinted.fr, .it o .nl funciona con la
+ * misma cuenta, y cambiar el enlace solo servia para romper lo que ya iba bien.
+ * Los paises que dan problemas se quitan con filters.paisesPermitidos.
  */
 export function listingUrl(item, domain) {
-  const fallback = item?.id ? `https://${domain}/items/${item.id}` : '';
-  const raw = item?.url;
-  if (!raw) return fallback;
-  try {
-    const u = new URL(raw);
-    u.protocol = 'https:';
-    u.host = domain;
-    return u.toString();
-  } catch {
-    return fallback;
-  }
+  return item?.url || (item?.id ? `https://${domain}/items/${item.id}` : '');
 }
 
 /** Aplana un item crudo de la API de Vinted a la forma que usa el agente. */
@@ -128,7 +126,7 @@ export function toListing(item, domain = 'www.vinted.es') {
     favourites: item?.favourite_count ?? 0,
     photo: item?.photo?.url ?? item?.photos?.[0]?.url ?? '',
     url: listingUrl(item, domain),
-    sourceHost: sourceHost(item),
+    pais: countryCode(item),
     createdAt: item?.photo?.high_resolution?.timestamp
       ? new Date(item.photo.high_resolution.timestamp * 1000).toISOString()
       : null,
@@ -187,6 +185,7 @@ export function evaluate(listing, config) {
     modelLabel: null,
     sizeMm: null,
     cellular: false,
+    pais: listing.pais ?? null,
     flags: [],
   };
 
@@ -195,11 +194,13 @@ export function evaluate(listing, config) {
     return result;
   }
 
-  // Un anuncio de otro pais no sirve: aunque se abra en vinted.es, si el
-  // vendedor no envia a Espana no se puede ni comprar ni escribirle. Mejor no
-  // avisar que hacer perder el tiempo abriendo anuncios imposibles.
-  if (f.soloPaisPropio && listing.sourceHost && listing.sourceHost !== hostBase(config.domain)) {
-    result.reason = `anuncio de otro pais (${listing.sourceHost})`;
+  // Lista blanca de paises. Comprar fuera de Espana funciona en casi toda la
+  // zona (Francia, Italia, Holanda...), asi que NO se descarta por ser
+  // extranjero: solo se quitan los paises que el usuario haya visto fallar.
+  // Lista vacia o ausente = no se filtra por pais.
+  const paises = f.paisesPermitidos;
+  if (paises?.length && result.pais && !paises.includes(result.pais)) {
+    result.reason = `pais no admitido (vinted.${result.pais})`;
     return result;
   }
 

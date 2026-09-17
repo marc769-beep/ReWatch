@@ -53,7 +53,11 @@ export async function sendTelegram(matches, { logger = console } = {}) {
 
   const body = matches
     .slice(0, 10)
-    .map((m) => `${m.modelLabel}${m.sizeMm ? ` ${m.sizeMm}mm` : ''} — ${m.price} ${m.currency}\n${m.url}`)
+    .map((m) => {
+      // El pais va en el aviso: de un vistazo se sabe si toca envio de fuera.
+      const pais = m.pais ? ` · ${m.pais.toUpperCase()}` : '';
+      return `${m.modelLabel}${m.sizeMm ? ` ${m.sizeMm}mm` : ''} — ${m.price} ${m.currency}${pais}\n${m.url}`;
+    })
     .join('\n\n');
   const text = `ReWatch: ${matches.length} Apple Watch nuevos en Vinted\n\n${body}`;
 

@@ -25,7 +25,7 @@ const DEFAULTS = {
     allowUnknownCondition: true,
     treatPlainSeAsSe2: true,
     requireAppleWatchInTitle: true,
-    soloPaisPropio: true,
+    paisesPermitidos: [],
     excludePatterns: [],
     warnPatterns: [],
   },
