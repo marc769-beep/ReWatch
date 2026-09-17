@@ -5,6 +5,18 @@ Rastrea Vinted, se queda solo con los Apple Watch que encajan con tus criterios
 
 Sin dependencias: solo Node 20 o superior.
 
+## Instalación desde cero (Mac)
+
+```bash
+cd ~ && git clone --branch claude/apple-watch-vinted-agent-eszzm5 \
+  https://github.com/marc769-beep/ReWatch.git ReWatchSE
+open ~/ReWatchSE/agent
+```
+
+En la ventana que se abre, doble clic en **`instalar.command`**. Comprueba
+Node, conecta Telegram paso a paso, hace una primera revisión por pantalla y
+deja un **ReWatch.command** en el Escritorio para arrancarlo cada día.
+
 ## Uso rápido
 
 ```bash
@@ -12,7 +24,7 @@ cd agent
 
 npm test                 # comprueba la lógica de filtrado (sin red)
 npm start                # una pasada y sale
-npm run watch            # vigilancia continua cada ~15 min
+npm run watch            # vigilancia continua (intervalMinutes)
 ```
 
 Otras opciones:
