@@ -69,6 +69,29 @@ export function extractPrice(item) {
   return null;
 }
 
+/**
+ * Enlace al anuncio en NUESTRO dominio.
+ *
+ * Vinted devuelve la url del pais del vendedor (vinted.de, vinted.fr...), y
+ * ahi el comprador no tiene sesion iniciada: no puede comprar ni escribir al
+ * vendedor, solo recibe un error. El anuncio es el mismo en todos los dominios
+ * y el identificador es global, asi que se conserva la ruta y se cambia el
+ * dominio por el de casa.
+ */
+export function listingUrl(item, domain) {
+  const fallback = item?.id ? `https://${domain}/items/${item.id}` : '';
+  const raw = item?.url;
+  if (!raw) return fallback;
+  try {
+    const u = new URL(raw);
+    u.protocol = 'https:';
+    u.host = domain;
+    return u.toString();
+  } catch {
+    return fallback;
+  }
+}
+
 /** Aplana un item crudo de la API de Vinted a la forma que usa el agente. */
 export function toListing(item, domain = 'www.vinted.es') {
   const title = item?.title ?? '';
@@ -85,7 +108,7 @@ export function toListing(item, domain = 'www.vinted.es') {
     seller: item?.user?.login ?? '',
     favourites: item?.favourite_count ?? 0,
     photo: item?.photo?.url ?? item?.photos?.[0]?.url ?? '',
-    url: item?.url ?? (item?.id ? `https://${domain}/items/${item.id}` : ''),
+    url: listingUrl(item, domain),
     createdAt: item?.photo?.high_resolution?.timestamp
       ? new Date(item.photo.high_resolution.timestamp * 1000).toISOString()
       : null,

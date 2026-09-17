@@ -61,6 +61,32 @@ test('checkCondition compara por inclusion, no por igualdad exacta', () => {
   assert.equal(checkCondition('', { ...f, allowUnknownCondition: false }).ok, false);
 });
 
+test('los anuncios de otros paises se enlazan al Vinted de casa', () => {
+  const alemania = {
+    id: 4242,
+    title: 'Apple Watch SE 44mm',
+    url: 'https://www.vinted.de/items/4242-apple-watch-se-44mm',
+  };
+  const listing = toListing(alemania, 'www.vinted.es');
+  assert.equal(
+    listing.url,
+    'https://www.vinted.es/items/4242-apple-watch-se-44mm',
+    'en vinted.de no hay sesion: no se puede comprar ni escribir al vendedor',
+  );
+
+  // Francia, Italia y cualquier otro pais, igual.
+  for (const host of ['www.vinted.fr', 'www.vinted.it', 'www.vinted.nl', 'www.vinted.pl']) {
+    const l = toListing({ id: 7, url: `https://${host}/items/7-reloj` }, 'www.vinted.es');
+    assert.equal(l.url, 'https://www.vinted.es/items/7-reloj');
+  }
+});
+
+test('si Vinted no da url, se construye con el id', () => {
+  assert.equal(toListing({ id: 55 }, 'www.vinted.es').url, 'https://www.vinted.es/items/55');
+  assert.equal(toListing({ id: 55, url: 'no-es-una-url' }, 'www.vinted.es').url, 'https://www.vinted.es/items/55');
+  assert.equal(toListing({}, 'www.vinted.es').url, '');
+});
+
 test('toListing aplana el item de la API', () => {
   const l = toListing(items.find((i) => i.id === 2001));
   assert.equal(l.id, '2001');
