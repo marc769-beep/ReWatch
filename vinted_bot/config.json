@@ -1,0 +1,18 @@
+{
+  "domain": "www.vinted.es",
+  "pages": 1,
+  "interval_minutes": 10,
+  "seen_file": "seen.json",
+  "global_exclude": ["correa", "funda", "protector", "cargador", "solo caja", "caja vacía", "piezas", "roto", "rota", "bloqueado", "icloud", "réplica", "replica", "busco", "series", "ultra"],
+  "searches": [
+    {
+      "name": "Apple Watch SE 2",
+      "keywords": "apple watch se 2",
+      "min_price": null,
+      "max_price": null,
+      "must_include_in_title": ["watch"],
+      "only_se2": true,
+      "exclude": []
+    }
+  ]
+}
